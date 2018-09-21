@@ -1,3 +1,5 @@
+Made by Laura ;P
+
 # Description of the course work is likely to be upatded!#
 
 Please note that the description of the course work might be updated from time to time to clarify things or fix mistakes.
@@ -110,7 +112,7 @@ Alternatively, you can use Emacs, vim, or your favourite text editor. Choose whi
 We reccommend using IntelliJ Idea. To launch it on dice machines, open a terminal and type
 
 ```
-idea18-ce 
+idea18-ce
 ```
 
 To import the project, after idea launches select "Import Project" and select the root directory of your project. On the following screen, ensure that the "Create project from existing sources" option is selected. You will then be presented with a series of screens. Just keep selecting "Next" without modifying any options. If you are asked whether to overwrite an existing .iml file, select the overwrite option.
