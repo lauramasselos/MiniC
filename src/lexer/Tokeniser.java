@@ -46,6 +46,38 @@ public class Tokeniser {
     /*
      * To be completed
      */
+    private Token comment() throws IOException {
+    	char c = scanner.next();
+    	while (c != '\n') {
+    		scanner.next();
+    	}
+		return next();
+    }
+    
+   private Token multiComment() throws IOException {
+	   char c = scanner.next();
+	   while (c != '*' && scanner.peek() != '/') {
+   			scanner.next();
+   		}
+		return next();
+    }
+   // look up #include in C (i.e. #include "str" and #include"str" are valid, not #include 231)
+  /* private Token include() throws IOException {
+       int line = scanner.getLine();
+       int column = scanner.getColumn();
+	   char c = scanner.next();
+	   StringBuilder sb = new StringBuilder();
+	   sb.append(c);
+	   c = scanner.peek();
+	   while (Character.isLetter(c)) {
+		   sb.append(c);
+		   scanner.next();
+		   c = scanner.peek();
+		   if (sb.toString().equals("include")) break;
+	   }
+
+    }
+    */
     private Token next() throws IOException {
 
         int line = scanner.getLine();
@@ -73,12 +105,24 @@ public class Tokeniser {
         if (c == '*') return new Token(TokenClass.ASTERIX, line, column);
         if (c == '%') return new Token(TokenClass.REM, line, column);
         if (c == '/') {
-        	StringBuilder sb = new StringBuilder();
-        	sb.append(c);
         	c = scanner.peek();
-        	if (c != '*' && c != '/') {
+        	if (c == '/') comment();
+        	if (c == '*') multiComment();
+        	else {
         		return new Token(TokenClass.DIV, line, column);
         	}
+        }
+        
+       // if (c == '#') include();
+        
+        if (c == '&') {
+        	scanner.next();
+        	return new Token(TokenClass.AND, line, column);
+        }
+        
+        if (c == '|') {
+        	scanner.next();
+        	return new Token(TokenClass.OR, line, column);
         }
         
         if (c == '<') {
@@ -112,7 +156,7 @@ public class Tokeniser {
         	}
         	else return new Token(TokenClass.ASSIGN, line, column);
         }
-        
+        /*
         if (c == '_' || Character.isLetterOrDigit(c)) {
         	StringBuilder sb = new StringBuilder();
         	sb.append(c);
@@ -126,7 +170,7 @@ public class Tokeniser {
         	return new Token(TokenClass.IDENTIFIER, str, line, column);
         }
 
-
+*/
 
         // if we reach this point, it means we did not recognise a valid token
         error(c, line, column);
