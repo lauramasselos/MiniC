@@ -57,12 +57,75 @@ public class Tokeniser {
         // skip white spaces
         if (Character.isWhitespace(c))
             return next();
+        
+        
+        if (c == '{') return new Token(TokenClass.LBRA, line, column);
+        if (c == '}') return new Token(TokenClass.RBRA, line, column);
+        if (c == '(') return new Token(TokenClass.LPAR, line, column);
+        if (c == ')') return new Token(TokenClass.RPAR, line, column);
+        if (c == '[') return new Token(TokenClass.LSBR, line, column);
+        if (c == ']') return new Token(TokenClass.RSBR, line, column);
+        if (c == ';') return new Token(TokenClass.SC, line, column);
+        if (c == ',') return new Token(TokenClass.COMMA, line, column);
+        if (c == '.') return new Token(TokenClass.DOT, line, column);
+        if (c == '+') return new Token(TokenClass.PLUS, line, column);
+        if (c == '-') return new Token(TokenClass.MINUS, line, column);
+        if (c == '*') return new Token(TokenClass.ASTERIX, line, column);
+        if (c == '%') return new Token(TokenClass.REM, line, column);
+        if (c == '/') {
+        	StringBuilder sb = new StringBuilder();
+        	sb.append(c);
+        	c = scanner.peek();
+        	if (c != '*' && c != '/') {
+        		return new Token(TokenClass.DIV, line, column);
+        	}
+        }
+        
+        if (c == '<') {
+        	c = scanner.peek();
+        	if (c == '=') {
+        		scanner.next();
+        		return new Token(TokenClass.LE, line, column);
+        	}
+        	else return new Token(TokenClass.LT, line, column);
+        }
+        
+        if (c == '>') {
+        	c = scanner.peek();
+        	if (c == '=') {
+        		scanner.next();
+        		return new Token(TokenClass.GE, line, column);
+        	}
+        	else return new Token(TokenClass.GT, line, column);
+        }
+        
+        if (c == '!') {
+        	scanner.next();
+        	return new Token(TokenClass.NE, line, column);
+        }
+        
+        if (c == '=') {
+        	c = scanner.peek();
+        	if (c == '=') {
+        		scanner.next();
+        		return new Token(TokenClass.EQ, line, column);
+        	}
+        	else return new Token(TokenClass.ASSIGN, line, column);
+        }
+        
+        if (c == '_' || Character.isLetterOrDigit(c)) {
+        	StringBuilder sb = new StringBuilder();
+        	sb.append(c);
+        	c = scanner.peek();
+        	while (Character.isLetterOrDigit(c) || c == '_') {
+        		sb.append(c);
+        		scanner.next();
+        		c = scanner.peek();
+        	}
+        	String str = sb.toString();
+        	return new Token(TokenClass.IDENTIFIER, str, line, column);
+        }
 
-        // recognises the plus operator
-        if (c == '+')
-            return new Token(TokenClass.PLUS, line, column);
-
-        // ... to be completed
 
 
         // if we reach this point, it means we did not recognise a valid token
