@@ -49,17 +49,27 @@ public class Tokeniser {
     private Token comment() throws IOException {
     	char c = scanner.next();
     	while (c != '\n') {
-    		scanner.next();
+    		c = scanner.next();
     	}
 		return next();
     }
-    // multiComment needs to return error if comment is not escaped
+    
+
    private Token multiComment() throws IOException {
-	   char c = scanner.next();
-	   while (c != '*' && scanner.peek() != '/') {
-   			scanner.next();
+	   char c = scanner.next(); // pointing at * now
+	   int line = scanner.getLine(); 
+	   int column = scanner.getColumn();
+	   while (true) {
+		   if (scanner.peek() == -1) break; // if we reach EOF without reaching end of comment, this is INVALID
+   			c = scanner.next();
+   			if (c == '*') {
+   				if (scanner.peek() == '/') {
+   					scanner.next();
+   					return next();
+   				}
+   			}
    		}
-		return next();
+	   return new Token(TokenClass.INVALID, line, column);
     }
    
     
@@ -75,7 +85,7 @@ public class Tokeniser {
         if (Character.isWhitespace(c))
             return next();
         
-        
+        if (c == -1) return new Token(TokenClass.EOF, line, column);
         if (c == '{') return new Token(TokenClass.LBRA, line, column);
         if (c == '}') return new Token(TokenClass.RBRA, line, column);
         if (c == '(') return new Token(TokenClass.LPAR, line, column);
@@ -97,12 +107,26 @@ public class Tokeniser {
         		return new Token(TokenClass.DIV, line, column);
         	}
         }
-        
-    /*   if (c == '#') {
+ 	   
+ 	   // before returning include token peek that next character is NOT a digit letter or '_'
+ 	   // e.g. #include= ---> SHOULD LEX OKAY, BUT RETURN A PARSING ERROR
+ 	   // BUT #includeeeeeeeeeee --> RETURN WHOLE TOKEN INVALID, LEXING ERROR
+       /*if (c == '#') {
     	   StringBuilder sb = new StringBuilder();
     	   sb.append(c);
+    	   if (scanner.peek() == -1) return new Token(TokenClass.INVALID, line, column);
+    	   c = scanner.next();
+    	   for (int i = 0; i < 7; i++) {
+    		   sb.append(c);
+    		   if (Character.isWhitespace(scanner.peek()) || scanner.peek() == -1) break;
+    		   c = scanner.next(); 
+    	   }
+    	   if (Character.isWhitespace(c) && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
+    	   if (scanner.peek() == -1 && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
+    	   if (Character.isDefined(c) && !(Character.isLetterOrDigit(c)) && !(c == '_') && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
+    	   else return new Token(TokenClass.INVALID, line, column);
     	   
-       };*/
+       }*/
         
         if (c == '&') {
         	scanner.next();
@@ -146,6 +170,8 @@ public class Tokeniser {
         	else return new Token(TokenClass.ASSIGN, line, column);
         }
         
+        // INT_LITERAL
+        
         if (Character.isDigit(c)) {
            StringBuilder sb = new StringBuilder();
      	   sb.append(c);
@@ -157,73 +183,95 @@ public class Tokeniser {
      	   }
      	   return new Token(TokenClass.INT_LITERAL, sb.toString(), line, column);
         }
+       
+        
+        // CHAR_LITERAL
+        
         
         if (c == '\'') {
            StringBuilder sb = new StringBuilder();
      	   sb.append(c);
      	   c = scanner.peek();
      	   
-     	   if (Character.isDefined(c)) {
+     	   if (c == '\\') {
      		   sb.append(c);
-     		   scanner.next();
-     	   }
-     	   else {
-     		   scanner.next();
-     		  return new Token(TokenClass.INVALID, line, column); 
+     		   c = scanner.next();
+     		   c = scanner.peek();
+     		   if (c == 't' || c == 'b' || c == 'n' || c == 'r' || c == 'f' || c == '\'' || c == '\"' || c == '\\' || c == '0') {
+     			   sb.append(c);
+     			   c = scanner.next();
+     			   c = scanner.peek();
+     			   if (c == '\'') {
+     				   sb.append(c);
+     				   c = scanner.next();
+     				   return new Token(TokenClass.CHAR_LITERAL, sb.toString(), line, column);
+     			   }
+     			   else return new Token(TokenClass.INVALID, line, column);
+     		   }
+     		   else return new Token(TokenClass.INVALID, line, column);
      	   }
      	   
-     	   c = scanner.peek();
-     	   if (c == '\'') {
+     	   else if (Character.isDefined(c) && c != '\\' && c!= '\'' && c!= '\"') {
      		   sb.append(c);
-     		   scanner.next();
-     		   return new Token(TokenClass.CHAR_LITERAL, sb.toString(), line, column);
+     		   c = scanner.next();
+     		   c = scanner.peek();
+     		   if (c == '\'') {
+     			   sb.append(c);
+     			   c = scanner.next();
+     			   return new Token(TokenClass.CHAR_LITERAL, sb.toString(), line, column);
+     		   }
+     		   else return new Token(TokenClass.INVALID, line, column);
      	   }
-     	   else {
-     		   scanner.next();
-     		   return new Token(TokenClass.INVALID, line, column);
-     	   }
+     	   else return new Token(TokenClass.INVALID, line, column);
+     	   
         }
         
+        // FIX STRING_LITERAL (add escape character exceptions, e.g. \" will be lexed as " !)
+        // i.e. "I said \"Hello!\"" is not currently lexed as "I said "Hello!""; this needs to be fixed
+        
         if (c == '\"') {
-            StringBuilder sb = new StringBuilder();
-      	   sb.append(c);
-      	   c = scanner.peek();
-      	   
-      	   if (Character.isDefined(c)) {
-      		   sb.append(c);
-      		   scanner.next();
-      	   }
-      	   else {
-      		   scanner.next();
-      		  return new Token(TokenClass.INVALID, line, column); 
-      	   }
-      	   
-      	   c = scanner.peek();
-      	   if (c == '\"') {
-      		   sb.append(c);
-      		   scanner.next();
-      		   return new Token(TokenClass.STRING_LITERAL, sb.toString(), line, column);
-      	   }
-      	   else {
-      		   scanner.next();
-      		   return new Token(TokenClass.INVALID, line, column);
-      	   }
-         }
-        
-        
-        if (c == '_') {
         	StringBuilder sb = new StringBuilder();
         	sb.append(c);
-        	scanner.next();
-        	c = scanner.peek();
-        	while (Character.isLetterOrDigit(c) || c == '_') {
+        	c = scanner.next();
+        	while (Character.isDefined(c) || Character.isWhitespace(c)) {
+        		if (c  != '\\' && scanner.peek() == '\"') break;
         		sb.append(c);
-        		scanner.next();
-        		c = scanner.peek();
-       		}
-        	return new Token(TokenClass.IDENTIFIER, sb.toString(), line, column);
-       	}
-        	
+        		if (scanner.peek() == -1) return new Token(TokenClass.INVALID, line, column);
+        		c = scanner.next();
+        	} 
+        	sb.append(c);
+        	c = scanner.next();
+        	sb.append(c);
+        	return new Token(TokenClass.STRING_LITERAL, sb.toString(), line, column);
+        }
+        
+        
+        // IDENTIFIERS, TYPES, KEYWORDS
+        
+        if (Character.isLetter(c) || c == '_') {
+        	StringBuilder sb = new StringBuilder();
+        	sb.append(c);
+        	c = scanner.next();
+        	while(Character.isLetterOrDigit(c) || c == '_') {
+        		sb.append(c);
+        		c = scanner.next();
+        		if (sb.toString().equals("int") && Character.isWhitespace(c)) return new Token(TokenClass.INT, line, column); 
+    			if (sb.toString().equals("void") && Character.isWhitespace(c)) return new Token(TokenClass.VOID, line, column);
+    			if (sb.toString().equals("char") && Character.isWhitespace(c)) return new Token(TokenClass.CHAR, line, column);
+    			if (sb.toString().equals("if") && Character.isWhitespace(c)) return new Token(TokenClass.IF, line, column);
+    			if (sb.toString().equals("else") && Character.isWhitespace(c)) return new Token(TokenClass.ELSE, line, column);
+    			if (sb.toString().equals("while") && Character.isWhitespace(c)) return new Token(TokenClass.WHILE, line, column);
+    			if (sb.toString().equals("return") && Character.isWhitespace(c)) return new Token(TokenClass.RETURN, line, column);
+    			if (sb.toString().equals("struct") && Character.isWhitespace(c)) return new Token(TokenClass.STRUCT, line, column);
+    			if (sb.toString().equals("sizeof") && Character.isWhitespace(c)) return new Token(TokenClass.SIZEOF, line, column);
+    			if (Character.isWhitespace(c)) return new Token(TokenClass.IDENTIFIER, sb.toString(), line, column);
+    			if (scanner.peek() == -1) {
+    				sb.append(c);
+    				return new Token(TokenClass.IDENTIFIER, sb.toString(), line, column);
+    			}
+        	}
+        	return new Token(TokenClass.INVALID, line, column);
+        }
         
 
         // if we reach this point, it means we did not recognise a valid token
@@ -231,5 +279,5 @@ public class Tokeniser {
         return new Token(TokenClass.INVALID, line, column);
     }
 
-
+        
 }
