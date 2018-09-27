@@ -62,25 +62,7 @@ public class Tokeniser {
 		return next();
     }
    
-  
-   
-   // look up #include in C (i.e. #include "str" and #include"str" are valid, not #include 231)
-  /* private Token include() throws IOException {
-       int line = scanner.getLine();
-       int column = scanner.getColumn();
-	   char c = scanner.next();
-	   StringBuilder sb = new StringBuilder();
-	   sb.append(c);
-	   c = scanner.peek();
-	   while (Character.isLetter(c)) {
-		   sb.append(c);
-		   scanner.next();
-		   c = scanner.peek();
-		   if (sb.toString().equals("include")) break;
-	   }
-
-    }
-    */
+    
     private Token next() throws IOException {
 
         int line = scanner.getLine();
@@ -116,7 +98,11 @@ public class Tokeniser {
         	}
         }
         
-       // if (c == '#') include();
+    /*   if (c == '#') {
+    	   StringBuilder sb = new StringBuilder();
+    	   sb.append(c);
+    	   
+       };*/
         
         if (c == '&') {
         	scanner.next();
@@ -198,21 +184,47 @@ public class Tokeniser {
      	   }
         }
         
-        /*
-        if (c == '_' || Character.isLetterOrDigit(c)) {
+        if (c == '\"') {
+            StringBuilder sb = new StringBuilder();
+      	   sb.append(c);
+      	   c = scanner.peek();
+      	   
+      	   if (Character.isDefined(c)) {
+      		   sb.append(c);
+      		   scanner.next();
+      	   }
+      	   else {
+      		   scanner.next();
+      		  return new Token(TokenClass.INVALID, line, column); 
+      	   }
+      	   
+      	   c = scanner.peek();
+      	   if (c == '\"') {
+      		   sb.append(c);
+      		   scanner.next();
+      		   return new Token(TokenClass.STRING_LITERAL, sb.toString(), line, column);
+      	   }
+      	   else {
+      		   scanner.next();
+      		   return new Token(TokenClass.INVALID, line, column);
+      	   }
+         }
+        
+        
+        if (c == '_') {
         	StringBuilder sb = new StringBuilder();
         	sb.append(c);
+        	scanner.next();
         	c = scanner.peek();
         	while (Character.isLetterOrDigit(c) || c == '_') {
         		sb.append(c);
         		scanner.next();
         		c = scanner.peek();
-        	}
-        	String str = sb.toString();
-        	return new Token(TokenClass.IDENTIFIER, str, line, column);
-        }
-
-*/
+       		}
+        	return new Token(TokenClass.IDENTIFIER, sb.toString(), line, column);
+       	}
+        	
+        
 
         // if we reach this point, it means we did not recognise a valid token
         error(c, line, column);
