@@ -53,7 +53,7 @@ public class Tokeniser {
     	}
 		return next();
     }
-    
+    // multiComment needs to return error if comment is not escaped
    private Token multiComment() throws IOException {
 	   char c = scanner.next();
 	   while (c != '*' && scanner.peek() != '/') {
@@ -61,6 +61,9 @@ public class Tokeniser {
    		}
 		return next();
     }
+   
+  
+   
    // look up #include in C (i.e. #include "str" and #include"str" are valid, not #include 231)
   /* private Token include() throws IOException {
        int line = scanner.getLine();
@@ -156,6 +159,45 @@ public class Tokeniser {
         	}
         	else return new Token(TokenClass.ASSIGN, line, column);
         }
+        
+        if (Character.isDigit(c)) {
+           StringBuilder sb = new StringBuilder();
+     	   sb.append(c);
+     	   c = scanner.peek();
+     	   while (Character.isDigit(c)) {
+     		   sb.append(c);
+     		   scanner.next();
+     		   c = scanner.peek();
+     	   }
+     	   return new Token(TokenClass.INT_LITERAL, sb.toString(), line, column);
+        }
+        
+        if (c == '\'') {
+           StringBuilder sb = new StringBuilder();
+     	   sb.append(c);
+     	   c = scanner.peek();
+     	   
+     	   if (Character.isDefined(c)) {
+     		   sb.append(c);
+     		   scanner.next();
+     	   }
+     	   else {
+     		   scanner.next();
+     		  return new Token(TokenClass.INVALID, line, column); 
+     	   }
+     	   
+     	   c = scanner.peek();
+     	   if (c == '\'') {
+     		   sb.append(c);
+     		   scanner.next();
+     		   return new Token(TokenClass.CHAR_LITERAL, sb.toString(), line, column);
+     	   }
+     	   else {
+     		   scanner.next();
+     		   return new Token(TokenClass.INVALID, line, column);
+     	   }
+        }
+        
         /*
         if (c == '_' || Character.isLetterOrDigit(c)) {
         	StringBuilder sb = new StringBuilder();
