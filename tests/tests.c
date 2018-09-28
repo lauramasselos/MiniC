@@ -1,5 +1,5 @@
 #include "minic-stdlib.h"
-
+  // this is a comment
 void main() {
   int n;
   n = 029410;
@@ -11,12 +11,27 @@ void main() {
   s2[] "Where are you now? \n";
 
 int ident_1;
-char#;
+char # 3400_ a15;
+int ident__41();
+
+/* this is a
+//multi
+line *
+comment */
+
+if( n < 20 ) {
+
+      printf("n is less than 20\n" );
+   } else {
+
+      printf("n is not less than 20\n" );
+   }
+
+   printf("value of n is : %d\n", n);
+   printf(sizeof(s1));
+   return 0;
 
 
-
-  // this is a comment
-  n = read_i();
 
   }
 }
