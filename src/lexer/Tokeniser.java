@@ -46,14 +46,6 @@ public class Tokeniser {
     /*
      * To be completed
      */
-   /* private Token comment() throws IOException {
-    	char c = scanner.next(); // pointing at / now
-    	while (c != '\n' && c != '\r') {
-    		c = scanner.next();
-    	}
-		return next();
-    }*/
-    
        
     private Token next() throws IOException {
 
