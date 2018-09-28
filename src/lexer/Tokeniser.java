@@ -108,7 +108,7 @@ public class Tokeniser {
         if (c == '#') {
         	StringBuilder sb = new StringBuilder();
         	sb.append(c);
-        	if (scanner.peek() == -1 || Character.isWhitespace(scanner.peek())) return new Token(TokenClass.INVALID, line, column);
+        	if (scanner.peek() == -1 || !(Character.isLetterOrDigit(scanner.peek()))) return new Token(TokenClass.INVALID, line, column);
         	c = scanner.next();
         	while (Character.isLetterOrDigit(c)) {
         		sb.append(c);
