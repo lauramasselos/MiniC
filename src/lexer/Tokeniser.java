@@ -83,33 +83,27 @@ public class Tokeniser {
         if (c == '%') return new Token(TokenClass.REM, line, column);
         if (c == '/') {
         	c = scanner.peek();
-        	if (c != '/' && c != '*') return new Token(TokenClass.DIV, line, column);
-        	else {
-        		if (c == '/') {
-        			while (c != '\n' && c != '\r') {
-        	    		c = scanner.next();
-        	    	}
-        			return next();
-        		}
-        		if (c == '*') {
-        			while (true) {
-        				   if (scanner.peek() == -1) break; // if we reach EOF without reaching end of comment, this is INVALID
-        		   			c = scanner.next();
-        		   			if (c == '*') {
-        		   				if (scanner.peek() == '/') {
-        		   					scanner.next();
-        		   					return next();
-        		   				}
-        	
+        	if (c == '/') {
+        		while (c != '\n' && c != '\r') {
+        	   		c = scanner.next();
+        	   	}
+        		return next();
+        	}
+       		if (c == '*') {
+       			while (true) {
+       			   if (scanner.peek() == -1) break; // if we reach EOF without reaching end of comment, this is INVALID
+        		   	c = scanner.next();
+        		   		if (c == '*') {
+        		   			if (scanner.peek() == '/') {
+        		   				scanner.next();
+        		   				return next();
         		   			}
+        		   		}
         			}
         		}
-        	}
+       		else return new Token(TokenClass.DIV, line, column);
         }
  	   
- 	   // before returning include token peek that next character is NOT a digit letter or '_'
- 	   // e.g. #include= ---> SHOULD LEX OKAY, BUT RETURN A PARSING ERROR
- 	   // BUT #includeeeeeeeeeee --> RETURN WHOLE TOKEN INVALID, LEXING ERROR
         
         if (c == '#') {
         	StringBuilder sb = new StringBuilder();
@@ -192,70 +186,34 @@ public class Tokeniser {
       	   c = scanner.next();
       	   char p = scanner.peek();
       	   
-      	   while (c != '\'') {
-      		   if (c == '\\') {
-      			   switch (p) {
-      			   	case 't': sb.append('\t');
-      			   	case 'b': sb.append('\b');
-      			   	case 'n': sb.append('\n');
-      			   	case 'r': sb.append('\r');
-      			   	case 'f': sb.append('\f');
-      			   	case '\'': sb.append('\'');
-      			   	case '\"': sb.append('\"');
-      			   	case '\\': sb.append('\\');
-      			   	case '0': sb.append('\0');
-      			   	default: error (c, line, column); // check this is correct default
-      			   	}
-      			   c = scanner.next();
-      			   p = scanner.peek();
-      		   }
-      		   else sb.append(c);
-      		   c = scanner.next();
-      		   p = scanner.peek();
-      	   }
-      	   
-      	   sb.append(c);
-      	   return new Token(TokenClass.STRING_LITERAL, sb.toString(), line, column);
-        }
-     	   
-     	   /*
-     	   c = scanner.peek();
-     	   
-     	   if (c == '\\') {
-     		   sb.append(c);
-     		   c = scanner.next();
-     		   c = scanner.peek();
-     		   if (c == 't' || c == 'b' || c == 'n' || c == 'r' || c == 'f' || c == '\'' || c == '\"' || c == '\\' || c == '0') {
-     			   sb.append(c);
-     			   c = scanner.next();
-     			   c = scanner.peek();
-     			   if (c == '\'') {
-     				   sb.append(c);
-     				   c = scanner.next();
-     				   return new Token(TokenClass.CHAR_LITERAL, sb.toString(), line, column);
-     			   }
-     			   else return new Token(TokenClass.INVALID, line, column);
-     		   }
-     		   else return new Token(TokenClass.INVALID, line, column);
-     	   }
-     	   
-     	   else if (Character.isDefined(c) && c != '\\' && c!= '\'' && c!= '\"') {
-     		   sb.append(c);
-     		   c = scanner.next();
-     		   c = scanner.peek();
-     		   if (c == '\'') {
-     			   sb.append(c);
-     			   c = scanner.next();
-     			   return new Token(TokenClass.CHAR_LITERAL, sb.toString(), line, column);
-     		   }
-     		   else return new Token(TokenClass.INVALID, line, column);
-     	   }
-     	   else return new Token(TokenClass.INVALID, line, column);
-     	 */  
+      	 if (c == '\\') {
+			   switch (p) {
+			   	case 't': sb.append('\t');
+			   	case 'b': sb.append('\b');
+			   	case 'n': sb.append('\n');
+			   	case 'r': sb.append('\r');
+			   	case 'f': sb.append('\f');
+			   	case '\'': sb.append('\'');
+			   	case '\"': sb.append('\"');
+			   	case '\\': sb.append('\\');
+			   	case '0': sb.append('\0');
+			   	default: error (c, line, column); // check this is correct default
+			   	}
+			   c = scanner.next();
+      	 }
+      	 else sb.append(c);
+      	 
+      	 c = scanner.next();
+      	 
+      	 if (c == '\'') {
+      		 sb.append(c);
+      		 return new Token(TokenClass.CHAR_LITERAL, sb.toString(), line, column);
+      	 }
+      	 else return new Token(TokenClass.INVALID, line, column);
+
         }
         
-        // FIX STRING_LITERAL (add escape character exceptions, e.g. \" will be lexed as " !)
-        // i.e. "I said \"Hello!\"" is not currently lexed as "I said "Hello!""; this needs to be fixed
+        // STRING_LITERAL
         
         if (c == '\"') {
         	StringBuilder sb = new StringBuilder();
