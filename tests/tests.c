@@ -13,6 +13,7 @@ void main() {
 int ident_1;
 char # 3400_ a15;
 int ident__41();
+int m = n / 2; 
 
 /* this is a
 //multi
