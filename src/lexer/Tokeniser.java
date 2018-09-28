@@ -46,33 +46,15 @@ public class Tokeniser {
     /*
      * To be completed
      */
-    private Token comment() throws IOException {
-    	char c = scanner.next();
-    	while (c != '\n') {
+   /* private Token comment() throws IOException {
+    	char c = scanner.next(); // pointing at / now
+    	while (c != '\n' && c != '\r') {
     		c = scanner.next();
     	}
 		return next();
-    }
+    }*/
     
-
-   private Token multiComment() throws IOException {
-	   char c = scanner.next(); // pointing at * now
-	   int line = scanner.getLine(); 
-	   int column = scanner.getColumn();
-	   while (true) {
-		   if (scanner.peek() == -1) break; // if we reach EOF without reaching end of comment, this is INVALID
-   			c = scanner.next();
-   			if (c == '*') {
-   				if (scanner.peek() == '/') {
-   					scanner.next();
-   					return next();
-   				}
-   			}
-   		}
-	   return new Token(TokenClass.INVALID, line, column);
-    }
-   
-    
+       
     private Token next() throws IOException {
 
         int line = scanner.getLine();
@@ -101,32 +83,48 @@ public class Tokeniser {
         if (c == '%') return new Token(TokenClass.REM, line, column);
         if (c == '/') {
         	c = scanner.peek();
-        	if (c == '/') comment();
-        	if (c == '*') multiComment();
+        	if (c != '/' && c != '*') return new Token(TokenClass.DIV, line, column);
         	else {
-        		return new Token(TokenClass.DIV, line, column);
+        		if (c == '/') {
+        			while (c != '\n' && c != '\r') {
+        	    		c = scanner.next();
+        	    	}
+        			return next();
+        		}
+        		if (c == '*') {
+        			while (true) {
+        				   if (scanner.peek() == -1) break; // if we reach EOF without reaching end of comment, this is INVALID
+        		   			c = scanner.next();
+        		   			if (c == '*') {
+        		   				if (scanner.peek() == '/') {
+        		   					scanner.next();
+        		   					return next();
+        		   				}
+        	
+        		   			}
+        			}
+        		}
         	}
         }
  	   
  	   // before returning include token peek that next character is NOT a digit letter or '_'
  	   // e.g. #include= ---> SHOULD LEX OKAY, BUT RETURN A PARSING ERROR
  	   // BUT #includeeeeeeeeeee --> RETURN WHOLE TOKEN INVALID, LEXING ERROR
-       /*if (c == '#') {
-    	   StringBuilder sb = new StringBuilder();
-    	   sb.append(c);
-    	   if (scanner.peek() == -1) return new Token(TokenClass.INVALID, line, column);
-    	   c = scanner.next();
-    	   for (int i = 0; i < 7; i++) {
-    		   sb.append(c);
-    		   if (Character.isWhitespace(scanner.peek()) || scanner.peek() == -1) break;
-    		   c = scanner.next(); 
-    	   }
-    	   if (Character.isWhitespace(c) && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
-    	   if (scanner.peek() == -1 && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
-    	   if (Character.isDefined(c) && !(Character.isLetterOrDigit(c)) && !(c == '_') && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
-    	   else return new Token(TokenClass.INVALID, line, column);
-    	   
-       }*/
+        
+        if (c == '#') {
+        	StringBuilder sb = new StringBuilder();
+        	sb.append(c);
+        	if (scanner.peek() == -1 || Character.isWhitespace(scanner.peek())) return new Token(TokenClass.INVALID, line, column);
+        	c = scanner.next();
+        	while (Character.isLetterOrDigit(c)) {
+        		sb.append(c);
+        		if ((Character.isWhitespace(scanner.peek()) || scanner.peek() == -1) && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
+         	   if (Character.isDefined(scanner.peek()) && !(Character.isLetterOrDigit(scanner.peek())) && !(scanner.peek() == '_') && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
+         	   if ((Character.isWhitespace(scanner.peek()) || scanner.peek() == -1) && !(sb.toString().equals("#include"))) break;
+         	   c = scanner.next();
+        	}
+        	return new Token(TokenClass.INVALID, line, column);
+        }
         
         if (c == '&') {
         	scanner.next();
@@ -189,8 +187,38 @@ public class Tokeniser {
         
         
         if (c == '\'') {
-           StringBuilder sb = new StringBuilder();
-     	   sb.append(c);
+        	StringBuilder sb = new StringBuilder();
+        	sb.append(c);
+      	   c = scanner.next();
+      	   char p = scanner.peek();
+      	   
+      	   while (c != '\'') {
+      		   if (c == '\\') {
+      			   switch (p) {
+      			   	case 't': sb.append('\t');
+      			   	case 'b': sb.append('\b');
+      			   	case 'n': sb.append('\n');
+      			   	case 'r': sb.append('\r');
+      			   	case 'f': sb.append('\f');
+      			   	case '\'': sb.append('\'');
+      			   	case '\"': sb.append('\"');
+      			   	case '\\': sb.append('\\');
+      			   	case '0': sb.append('\0');
+      			   	default: error (c, line, column); // check this is correct default
+      			   	}
+      			   c = scanner.next();
+      			   p = scanner.peek();
+      		   }
+      		   else sb.append(c);
+      		   c = scanner.next();
+      		   p = scanner.peek();
+      	   }
+      	   
+      	   sb.append(c);
+      	   return new Token(TokenClass.STRING_LITERAL, sb.toString(), line, column);
+        }
+     	   
+     	   /*
      	   c = scanner.peek();
      	   
      	   if (c == '\\') {
@@ -223,7 +251,7 @@ public class Tokeniser {
      		   else return new Token(TokenClass.INVALID, line, column);
      	   }
      	   else return new Token(TokenClass.INVALID, line, column);
-     	   
+     	 */  
         }
         
         // FIX STRING_LITERAL (add escape character exceptions, e.g. \" will be lexed as " !)
@@ -232,18 +260,35 @@ public class Tokeniser {
         if (c == '\"') {
         	StringBuilder sb = new StringBuilder();
         	sb.append(c);
-        	c = scanner.next();
-        	while (Character.isDefined(c) || Character.isWhitespace(c)) {
-        		if (c  != '\\' && scanner.peek() == '\"') break;
-        		sb.append(c);
-        		if (scanner.peek() == -1) return new Token(TokenClass.INVALID, line, column);
-        		c = scanner.next();
-        	} 
-        	sb.append(c);
-        	c = scanner.next();
-        	sb.append(c);
-        	return new Token(TokenClass.STRING_LITERAL, sb.toString(), line, column);
+      	   c = scanner.next();
+      	   char p = scanner.peek();
+      	   
+      	   while (c != '\"') {
+      		   if (c == '\\') {
+      			   switch (p) {
+      			   	case 't': sb.append('\t');
+      			   	case 'b': sb.append('\b');
+      			   	case 'n': sb.append('\n');
+      			   	case 'r': sb.append('\r');
+      			   	case 'f': sb.append('\f');
+      			   	case '\'': sb.append('\'');
+      			   	case '\"': sb.append('\"');
+      			   	case '\\': sb.append('\\');
+      			   	case '0': sb.append('\0');
+      			   	default: error (c, line, column); // check this is correct default
+      			   	}
+      			   c = scanner.next();
+      			   p = scanner.peek();
+      		   }
+      		   else sb.append(c);
+      		   c = scanner.next();
+      		   p = scanner.peek();
+      	   }
+      	   
+      	   sb.append(c);
+      	   return new Token(TokenClass.STRING_LITERAL, sb.toString(), line, column);
         }
+        	
         
         
         // IDENTIFIERS, TYPES, KEYWORDS
@@ -251,28 +296,25 @@ public class Tokeniser {
         if (Character.isLetter(c) || c == '_') {
         	StringBuilder sb = new StringBuilder();
         	sb.append(c);
-        	c = scanner.next();
-        	while(Character.isLetterOrDigit(c) || c == '_') {
-        		sb.append(c);
+        	while (Character.isLetterOrDigit(scanner.peek()) || scanner.peek() == '_') {
         		c = scanner.next();
-        		if (sb.toString().equals("int") && Character.isWhitespace(c)) return new Token(TokenClass.INT, line, column); 
-    			if (sb.toString().equals("void") && Character.isWhitespace(c)) return new Token(TokenClass.VOID, line, column);
-    			if (sb.toString().equals("char") && Character.isWhitespace(c)) return new Token(TokenClass.CHAR, line, column);
-    			if (sb.toString().equals("if") && Character.isWhitespace(c)) return new Token(TokenClass.IF, line, column);
-    			if (sb.toString().equals("else") && Character.isWhitespace(c)) return new Token(TokenClass.ELSE, line, column);
-    			if (sb.toString().equals("while") && Character.isWhitespace(c)) return new Token(TokenClass.WHILE, line, column);
-    			if (sb.toString().equals("return") && Character.isWhitespace(c)) return new Token(TokenClass.RETURN, line, column);
-    			if (sb.toString().equals("struct") && Character.isWhitespace(c)) return new Token(TokenClass.STRUCT, line, column);
-    			if (sb.toString().equals("sizeof") && Character.isWhitespace(c)) return new Token(TokenClass.SIZEOF, line, column);
-    			if (Character.isWhitespace(c)) return new Token(TokenClass.IDENTIFIER, sb.toString(), line, column);
-    			if (scanner.peek() == -1) {
-    				sb.append(c);
-    				return new Token(TokenClass.IDENTIFIER, sb.toString(), line, column);
-    			}
+        		sb.append(c);
         	}
-        	return new Token(TokenClass.INVALID, line, column);
+        	
+        	if (sb.toString().equals("int")) return new Token(TokenClass.INT, line, column); 
+			if (sb.toString().equals("void")) return new Token(TokenClass.VOID, line, column);
+			if (sb.toString().equals("char")) return new Token(TokenClass.CHAR, line, column);
+			if (sb.toString().equals("if")) return new Token(TokenClass.IF, line, column);
+			if (sb.toString().equals("else")) return new Token(TokenClass.ELSE, line, column);
+			if (sb.toString().equals("while")) return new Token(TokenClass.WHILE, line, column);
+			if (sb.toString().equals("return")) return new Token(TokenClass.RETURN, line, column);
+			if (sb.toString().equals("struct")) return new Token(TokenClass.STRUCT, line, column);
+			if (sb.toString().equals("sizeof")) return new Token(TokenClass.SIZEOF, line, column);
+			else return new Token(TokenClass.IDENTIFIER, sb.toString(), line, column);
+        	
         }
         
+       
 
         // if we reach this point, it means we did not recognise a valid token
         error(c, line, column);
