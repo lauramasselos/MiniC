@@ -48,13 +48,7 @@ public class Tokeniser {
     /*
      * To be completed
      */
-   /* private Token comment() throws IOException {
-    	char c = scanner.next(); // pointing at / now
-    	while (c != '\n' && c != '\r') {
-    		c = scanner.next();
-    	}
-		return next();
-    }*/
+
     
        
     private Token next() throws IOException {
@@ -190,15 +184,15 @@ public class Tokeniser {
       	   
       	   if (c == '\\') {
       		   switch (p) {
-      		   case 't': sb.append('\t');
-      		   case 'b': sb.append('\b');
-      		   case 'n': sb.append('\n');
-      		   case 'r': sb.append('\r');
-      		   case 'f': sb.append('\f');
-      		   case '\'': sb.append('\'');
-      		   case '\"': sb.append('\"');
-      		   case '\\': sb.append('\\');
-      		   case '0': sb.append('\0');
+      		   case 't': sb.append('\t'); break;
+      		   case 'b': sb.append('\b'); break;
+      		   case 'n': sb.append('\n'); break;
+      		   case 'r': sb.append('\r'); break;
+      		   case 'f': sb.append('\f'); break;
+      		   case '\'': sb.append('\''); break;
+      		   case '\"': sb.append('\"'); break;
+      		   case '\\': sb.append('\\'); break;
+      		   case '0': sb.append('\0'); break;
       		   default: error (c, line, column); 
       		   }
       		   c = scanner.next();
@@ -226,21 +220,22 @@ public class Tokeniser {
       	   while (c != '\"') {
       		   if (c == '\\') {
       			   switch (p) {
-      			   	case 't': sb.append('\t');
-      			   	case 'b': sb.append('\b');
-      			   	case 'n': sb.append('\n');
-      			   	case 'r': sb.append('\r');
-      			   	case 'f': sb.append('\f');
-      			   	case '\'': sb.append('\'');
-      			   	case '\"': sb.append('\"');
-      			   	case '\\': sb.append('\\');
-      			   	case '0': sb.append('\0');
+      			   	case 't': sb.append('\t');  break;
+      			   	case 'b': sb.append('\b'); break;
+      			   	case 'n': sb.append('\n'); break;
+      			   	case 'r': sb.append('\r'); break;
+      			   	case 'f': sb.append('\f'); break;
+      			   	case '\'': sb.append('\''); break;
+      			   	case '\"': sb.append('\"'); break;
+      			   	case '\\': sb.append('\\'); break;
+      			   	case '0': sb.append('\0'); break;
       			   	default: error (c, line, column); 
       			   	}
       			   c = scanner.next();
       			   p = scanner.peek();
       		   }
       		   else sb.append(c);
+      		   
       		   c = scanner.next();
       		   p = scanner.peek();
       	   }
