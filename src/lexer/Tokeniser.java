@@ -1,5 +1,7 @@
 package lexer;
 
+import lexer.Scanner;
+import lexer.Token;
 import lexer.Token.TokenClass;
 
 import java.io.EOFException;
@@ -186,22 +188,22 @@ public class Tokeniser {
       	   c = scanner.next();
       	   char p = scanner.peek();
       	   
-      	 if (c == '\\') {
-			   switch (p) {
-			   	case 't': sb.append('\t');
-			   	case 'b': sb.append('\b');
-			   	case 'n': sb.append('\n');
-			   	case 'r': sb.append('\r');
-			   	case 'f': sb.append('\f');
-			   	case '\'': sb.append('\'');
-			   	case '\"': sb.append('\"');
-			   	case '\\': sb.append('\\');
-			   	case '0': sb.append('\0');
-			   	default: error (c, line, column); // check this is correct default
-			   	}
-			   c = scanner.next();
-      	 }
-      	 else sb.append(c);
+      	   if (c == '\\') {
+      		   switch (p) {
+      		   case 't': sb.append('\t');
+      		   case 'b': sb.append('\b');
+      		   case 'n': sb.append('\n');
+      		   case 'r': sb.append('\r');
+      		   case 'f': sb.append('\f');
+      		   case '\'': sb.append('\'');
+      		   case '\"': sb.append('\"');
+      		   case '\\': sb.append('\\');
+      		   case '0': sb.append('\0');
+      		   default: error (c, line, column); 
+      		   }
+      		   c = scanner.next();
+      	   }
+      	   else if (c != '\\' && c != '\'') sb.append(c);
       	 
       	 c = scanner.next();
       	 
@@ -233,7 +235,7 @@ public class Tokeniser {
       			   	case '\"': sb.append('\"');
       			   	case '\\': sb.append('\\');
       			   	case '0': sb.append('\0');
-      			   	default: error (c, line, column); // check this is correct default
+      			   	default: error (c, line, column); 
       			   	}
       			   c = scanner.next();
       			   p = scanner.peek();
