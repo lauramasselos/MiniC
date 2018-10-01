@@ -233,6 +233,15 @@ public class Parser {
     		expect(TokenClass.SC);
     	}
     	// last two rules: exp "=" exp ";" || exp ";"
+    	else {
+    		parseExps();
+    		if (accept(TokenClass.ASSIGN)) {
+    			nextToken();
+    			parseExps();
+    			expect(TokenClass.SC);
+    		}
+    		if (accept(TokenClass.SC)) nextToken();
+    	}
     }
     
     private void parseWithElses() {
