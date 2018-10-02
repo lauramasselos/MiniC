@@ -63,7 +63,7 @@ public class Tokeniser {
         if (Character.isWhitespace(c))
             return next();
         
-        if (c == -1) return new Token(TokenClass.EOF, line, column);
+ //       if (c == -1) return new Token(TokenClass.EOF, line, column);
         if (c == '{') return new Token(TokenClass.LBRA, line, column);
         if (c == '}') return new Token(TokenClass.RBRA, line, column);
         if (c == '(') return new Token(TokenClass.LPAR, line, column);
@@ -193,7 +193,7 @@ public class Tokeniser {
       		   case '\"': sb.append('\"'); break;
       		   case '\\': sb.append('\\'); break;
       		   case '0': sb.append('\0'); break;
-      		   default: error (c, line, column); 
+      		   default: error (c, line, column); return new Token(TokenClass.INVALID, line, column);
       		   }
       		   c = scanner.next();
       	   }
@@ -205,7 +205,10 @@ public class Tokeniser {
       		 sb.append(c);
       		 return new Token(TokenClass.CHAR_LITERAL, sb.toString(), line, column);
       	 }
-      	 else return new Token(TokenClass.INVALID, line, column);
+      	 else {
+      		 error (c, line, column);
+      		 return new Token(TokenClass.INVALID, line, column);
+      	 }
 
         }
         
@@ -229,7 +232,7 @@ public class Tokeniser {
       			   	case '\"': sb.append('\"'); break;
       			   	case '\\': sb.append('\\'); break;
       			   	case '0': sb.append('\0'); break;
-      			   	default: error (c, line, column); 
+      			   	default: error (c, line, column); return new Token(TokenClass.INVALID, line, column);
       			   	}
       			   c = scanner.next();
       			   p = scanner.peek();
