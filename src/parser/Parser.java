@@ -137,7 +137,7 @@ public class Parser {
         }
     }
 
-    private void parseStructDecls() {
+    private void parseStructDecls() {/*
         if (accept(TokenClass.STRUCT)) {
         	nextToken();
         	expect(TokenClass.IDENTIFIER);
@@ -147,10 +147,10 @@ public class Parser {
         	expect(TokenClass.RBRA);
         	expect(TokenClass.SC);
         	parseStructDecls();
-        }
+        }*/
     }
 
-    private void parseVarDecls() {
+    private void parseVarDecls() {/*
         parseTypes();
         expect(TokenClass.IDENTIFIER);
         if (lookAhead(1).tokenClass == TokenClass.SC) {
@@ -163,20 +163,20 @@ public class Parser {
         	expect(TokenClass.RSBR);
         	expect(TokenClass.SC);
         	parseVarDecls();
-        }
+        }*/
     }
 
-    private void parseFunDecls() {
+    private void parseFunDecls() {/*
         parseTypes();
         expect(TokenClass.IDENTIFIER);
         expect(TokenClass.LPAR);
         parseParams();
         expect(TokenClass.RPAR);
         parseBlock();
-        parseFunDecls();
+        parseFunDecls();*/
         
     }
-    
+    /*
     private void parseTypes() {
     	if (accept(TokenClass.INT) || accept(TokenClass.CHAR) || accept(TokenClass.VOID)) {
     		nextToken();
@@ -361,6 +361,6 @@ public class Parser {
     		parseFunCallRep();			// might have to do something like if (!accept(TokenClass.RPAR)) parseFunCallRep();, wait for scoreboard update & try again
     	}
     }
-
+*/
     // to be completed ...
 }
