@@ -142,11 +142,35 @@ public class Parser {
     }
 
     private void parseVarDecls() {
-        // to be completed ...
+        parseTypes();
+        expect(TokenClass.IDENTIFIER);
+        if (lookAhead(1).tokenClass == TokenClass.SC) {
+        	expect(TokenClass.SC);
+        	parseVarDecls();
+        }
+        else if (lookAhead(1).tokenClass == TokenClass.LSBR) {
+        	expect(TokenClass.LSBR);
+        	expect(TokenClass.INT_LITERAL);
+        	expect(TokenClass.RSBR);
+        	expect(TokenClass.SC);
+        	parseVarDecls();
+        }
     }
 
     private void parseFunDecls() {
         // to be completed ...
+    }
+    
+    private void parseTypes() {
+    	if (accept(TokenClass.INT) || accept(TokenClass.CHAR) || accept(TokenClass.VOID)) {
+    		nextToken();
+    		expect(TokenClass.ASTERIX);
+    	}
+    	else if (accept(TokenClass.STRUCT)) {
+    		nextToken();
+    		expect(TokenClass.IDENTIFIER);
+    		expect(TokenClass.ASTERIX);
+    	}
     }
 
     // to be completed ...
