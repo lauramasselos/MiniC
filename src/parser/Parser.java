@@ -138,7 +138,16 @@ public class Parser {
     }
 
     private void parseStructDecls() {
-        // to be completed ...
+        if (accept(TokenClass.STRUCT)) {
+        	nextToken();
+        	expect(TokenClass.IDENTIFIER);
+        	expect(TokenClass.LBRA);
+        	parseVarDecls();
+        	while (!accept(TokenClass.RBRA)) parseVarDecls();
+        	expect(TokenClass.RBRA);
+        	expect(TokenClass.SC);
+        	parseStructDecls();
+        }
     }
 
     private void parseVarDecls() {
@@ -158,7 +167,14 @@ public class Parser {
     }
 
     private void parseFunDecls() {
-        // to be completed ...
+        parseTypes();
+        expect(TokenClass.IDENTIFIER);
+        expect(TokenClass.LPAR);
+        parseParams();
+        expect(TokenClass.RPAR);
+        parseBlock();
+        parseFunDecls();
+        
     }
     
     private void parseTypes() {
@@ -170,6 +186,179 @@ public class Parser {
     		nextToken();
     		expect(TokenClass.IDENTIFIER);
     		expect(TokenClass.ASTERIX);
+    	}
+    }
+    
+    private void parseParams() {
+    	parseTypes();
+    	expect(TokenClass.IDENTIFIER);
+    	parseParamsRep();
+    }
+    
+    private void parseParamsRep() {
+    	if (accept(TokenClass.COMMA)) {
+    		nextToken();
+    		parseTypes();
+    		expect(TokenClass.IDENTIFIER);
+    		parseParamsRep();
+    	}
+    	else nextToken();
+    }
+    
+    private void parseStmnt() {
+    	if (accept(TokenClass.LBRA)) parseBlock();
+    	else if (accept(TokenClass.WHILE)) {
+    		nextToken();
+    		expect(TokenClass.LPAR);
+    		parseExp();
+    		expect(TokenClass.RPAR);
+    		parseStmnt();
+    	}
+    	else if (accept(TokenClass.IF)) {
+    		nextToken();
+    		expect(TokenClass.LPAR);
+    		parseExp();
+    		expect(TokenClass.RPAR);
+    		parseStmnt();
+    		if (accept(TokenClass.ELSE)) {
+    			nextToken();
+    			parseStmnt();
+    		}
+    	}
+    	else if (accept(TokenClass.RETURN)) {
+    		nextToken();
+    		if (accept(TokenClass.SC)) nextToken();
+    		else {
+    			parseExp();
+    			expect(TokenClass.SC);
+    		}
+    	}
+    	else {
+    		parseExp();
+    		if (accept(TokenClass.SC)) nextToken();
+    		else {
+    			expect(TokenClass.ASSIGN);
+    			parseExp();
+    		}
+    	}
+    }
+    
+    private void parseBlock() {
+    	if (accept(TokenClass.LBRA)) {
+    		nextToken();
+    		while (accept(TokenClass.INT) || accept(TokenClass.CHAR) || accept(TokenClass.VOID) || accept(TokenClass.STRUCT)) parseVarDecls();
+    		while (!accept(TokenClass.RBRA)) parseStmnt();
+    		expect(TokenClass.RBRA);
+    	}
+    }
+    
+    private void parseExp() {
+    	if (accept(TokenClass.LPAR) && lookAhead(1).tokenClass != TokenClass.INT  && lookAhead(1).tokenClass != TokenClass.CHAR && lookAhead(1).tokenClass != TokenClass.VOID && lookAhead(1).tokenClass != TokenClass.STRUCT) {
+    		nextToken(); 	
+    		parseExp();
+    		expect(TokenClass.RPAR);
+    		parseOtherExp();
+    	}
+    	else if (accept(TokenClass.IDENTIFIER)) {
+    		if (lookAhead(1).tokenClass == TokenClass.LPAR) parseFunCall();
+    		else {
+    			nextToken();
+    			parseOtherExp();
+    		}
+    	}
+    	else if (accept(TokenClass.INT_LITERAL)) {
+    		nextToken();
+    		parseOtherExp();
+    	}
+    	else if (accept(TokenClass.MINUS)) {
+    		nextToken();
+    		parseExp();
+    		parseOtherExp();
+    	}
+    	else if (accept(TokenClass.CHAR_LITERAL)) {
+    		nextToken();
+    		parseOtherExp();
+    	}
+    	else if (accept(TokenClass.STRING_LITERAL)) {
+    		nextToken();
+    		parseOtherExp();
+    	}
+    	else if (accept(TokenClass.ASTERIX)) {
+    		parseValueAt();
+    		parseOtherExp();
+    	}
+    	else if (accept(TokenClass.SIZEOF)) {
+    		parseSizeOf();
+    		parseOtherExp();
+    	}
+    	else if (accept(TokenClass.LPAR) && (lookAhead(1).tokenClass == TokenClass.INT || lookAhead(1).tokenClass == TokenClass.CHAR || lookAhead(1).tokenClass == TokenClass.VOID || lookAhead(1).tokenClass == TokenClass.STRUCT)) {
+    		parseTypeCast();
+    		parseOtherExp();
+    	}
+    }
+    
+    private void parseOtherExp() {
+    	if (accept(TokenClass.GT) || accept(TokenClass.LT) || accept(TokenClass.GE) || accept(TokenClass.LE) || accept(TokenClass.NE) || accept(TokenClass.EQ) || accept(TokenClass.PLUS) || accept(TokenClass.MINUS) || accept(TokenClass.ASTERIX) || accept(TokenClass.DIV) || accept(TokenClass.REM) || accept(TokenClass.OR) || accept(TokenClass.AND)) {
+    		nextToken();
+    		parseExp();
+    		parseOtherExp();
+    	}
+    	else if (accept(TokenClass.LSBR)) {
+    		nextToken();
+    		parseExp();
+    		expect(TokenClass.RSBR);
+    		parseOtherExp();
+    	}
+    	else if (accept(TokenClass.DOT)) {
+    		nextToken();
+    		expect(TokenClass.IDENTIFIER);
+    		parseOtherExp();
+    	}
+    }
+    
+    private void parseValueAt() {
+    	if (accept(TokenClass.ASTERIX)) {
+    		nextToken();
+    		parseExp();
+    	}
+    }
+    
+    private void parseSizeOf() {
+    	if (accept(TokenClass.SIZEOF)) {
+    		nextToken();
+    		expect(TokenClass.LPAR);
+    		parseTypes();
+    		expect(TokenClass.RPAR);
+    	}
+    }
+    
+    private void parseTypeCast() {
+    	if (accept(TokenClass.LPAR)) {
+    		nextToken();
+    		parseTypes();
+    		expect(TokenClass.RPAR);
+    		parseExp();
+    	}
+    }
+    
+    private void parseFunCall() {
+    	if (accept(TokenClass.IDENTIFIER)) {
+    		nextToken();
+    		expect(TokenClass.LPAR);
+    		if (accept(TokenClass.RPAR)) nextToken();
+    		else {
+    			parseExp();
+    			if (accept(TokenClass.COMMA)) parseFunCallRep();
+    			expect(TokenClass.RPAR);
+    		}
+    	}
+    }
+    
+    private void parseFunCallRep() {
+    	if (accept(TokenClass.COMMA)) {
+    		nextToken();
+    		parseExp();
+    		parseFunCallRep();			// might have to do something like if (!accept(TokenClass.RPAR)) parseFunCallRep();, wait for scoreboard update & try again
     	}
     }
 
