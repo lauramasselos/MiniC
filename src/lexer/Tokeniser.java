@@ -117,42 +117,54 @@ public class Tokeniser {
         }
         
         if (c == '&') {
-        	scanner.next();
-        	return new Token(TokenClass.AND, line, column);
+        	char p = scanner.peek();
+        	if (p == '&') {
+        		c = scanner.next();
+        		return new Token(TokenClass.AND, line, column);
+        	}
+        	else error (c, line, column); return new Token(TokenClass.INVALID, line, column);
         }
         
         if (c == '|') {
-        	scanner.next();
-        	return new Token(TokenClass.OR, line, column);
+        	char p = scanner.peek();
+        	if (p == '|') {
+        		c = scanner.next(); 
+        		return new Token(TokenClass.OR, line, column);
+        	}
+        	else error (c, line, column); return new Token(TokenClass.INVALID, line, column);
         }
         
         if (c == '<') {
-        	c = scanner.peek();
-        	if (c == '=') {
-        		scanner.next();
+        	char p = scanner.peek();
+        	if (p == '=') {
+        		c = scanner.next(); 
         		return new Token(TokenClass.LE, line, column);
         	}
         	else return new Token(TokenClass.LT, line, column);
         }
         
         if (c == '>') {
-        	c = scanner.peek();
-        	if (c == '=') {
-        		scanner.next();
+        	char p = scanner.peek();
+        	if (p == '=') {
+        		c = scanner.next(); 
         		return new Token(TokenClass.GE, line, column);
         	}
         	else return new Token(TokenClass.GT, line, column);
         }
         
         if (c == '!') {
-        	scanner.next();
-        	return new Token(TokenClass.NE, line, column);
+        	char p = scanner.peek();
+        	if (p == '=') {
+        		c = scanner.next(); 
+        		return new Token(TokenClass.NE, line, column);
+        	}
+        	else error (c, line, column); return new Token(TokenClass.INVALID, line, column);
         }
         
         if (c == '=') {
-        	c = scanner.peek();
-        	if (c == '=') {
-        		scanner.next();
+        	char p = scanner.peek();
+        	if (p == '=') {
+        		c = scanner.next(); 
         		return new Token(TokenClass.EQ, line, column);
         	}
         	else return new Token(TokenClass.ASSIGN, line, column);

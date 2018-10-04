@@ -32,7 +32,7 @@ public class Scanner {
 
         int r = input.read();
         if (r == -1)
-            throw new EOFException();
+           throw new EOFException();
 
         peeked = r;
         return (char) r;
