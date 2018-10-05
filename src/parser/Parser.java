@@ -366,6 +366,7 @@ public class Parser {
     			if (accept(TokenClass.COMMA)) parseFunCallRep();
     			expect(TokenClass.RPAR);
     		}
+    		parseOtherExp();
     	}
     }
     
