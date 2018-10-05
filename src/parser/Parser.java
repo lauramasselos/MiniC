@@ -216,14 +216,14 @@ public class Parser {
 
     private void parseStmnt() {
     	if (accept(TokenClass.LBRA)) parseBlock();
-    	else if (accept(TokenClass.WHILE) && lookAhead(2).tokenClass != TokenClass.RPAR) {
+    	else if (accept(TokenClass.WHILE) && lookAhead(2).tokenClass != TokenClass.RPAR) { 
     		nextToken();
     		expect(TokenClass.LPAR);
     		parseExp();
     		expect(TokenClass.RPAR);
     		parseStmnt();
     	}
-    	else if (accept(TokenClass.IF) && lookAhead(2).tokenClass != TokenClass.RPAR) {
+    	else if (accept(TokenClass.IF) && lookAhead(2).tokenClass != TokenClass.RPAR) { 
     		nextToken();
     		expect(TokenClass.LPAR);
     		parseExp();
@@ -266,7 +266,7 @@ public class Parser {
     		expect(TokenClass.RBRA);
     	}
     }
-    
+    // first = {“(“, IDENT, INT_LITERAL, “-“, CHAR_LITERAL, STRING_LITERAL, “*”, “sizeof”}
     private void parseExp() {
     	if (accept(TokenClass.LPAR) && lookAhead(1).tokenClass != TokenClass.INT  && lookAhead(1).tokenClass != TokenClass.CHAR && lookAhead(1).tokenClass != TokenClass.VOID && lookAhead(1).tokenClass != TokenClass.STRUCT) {
     		nextToken(); 	
@@ -313,7 +313,7 @@ public class Parser {
     }
     
     private void parseOtherExp() {
-    	if ((accept(TokenClass.GT) || accept(TokenClass.LT) || accept(TokenClass.GE) || accept(TokenClass.LE) || accept(TokenClass.NE) || accept(TokenClass.EQ) || accept(TokenClass.PLUS) || accept(TokenClass.MINUS) || accept(TokenClass.ASTERIX) || accept(TokenClass.DIV) || accept(TokenClass.REM) || accept(TokenClass.OR) || accept(TokenClass.AND)) && lookAhead(1).tokenClass != TokenClass.RPAR) {
+    	if (accept(TokenClass.GT) || accept(TokenClass.LT) || accept(TokenClass.GE) || accept(TokenClass.LE) || accept(TokenClass.NE) || accept(TokenClass.EQ) || accept(TokenClass.PLUS) || accept(TokenClass.MINUS) || accept(TokenClass.ASTERIX) || accept(TokenClass.DIV) || accept(TokenClass.REM) || accept(TokenClass.OR) || accept(TokenClass.AND)) {
     		nextToken();
     		parseExp();
     		parseOtherExp();
@@ -377,6 +377,4 @@ public class Parser {
     		parseFunCallRep();			
     	}
     }
-
-    // to be completed ...
 }
