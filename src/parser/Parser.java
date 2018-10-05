@@ -216,14 +216,14 @@ public class Parser {
 
     private void parseStmnt() {
     	if (accept(TokenClass.LBRA)) parseBlock();
-    	else if (accept(TokenClass.WHILE)) {
+    	else if (accept(TokenClass.WHILE) && lookAhead(2).tokenClass != TokenClass.RPAR) {
     		nextToken();
     		expect(TokenClass.LPAR);
     		parseExp();
     		expect(TokenClass.RPAR);
     		parseStmnt();
     	}
-    	else if (accept(TokenClass.IF)) {
+    	else if (accept(TokenClass.IF) && lookAhead(2).tokenClass != TokenClass.RPAR) {
     		nextToken();
     		expect(TokenClass.LPAR);
     		parseExp();
