@@ -38,7 +38,7 @@ int fundecl() {
   struct test ing[10];
   sizeof (int*) > test_1.test;
   while (n > m) { n = m; n + 1;} // should pass
-  if (n > m) {m = n;} else {m = n -1;}
-  if () { m = n + 1;} // should fail; can't have empty exp after if
-  while () {n+1;} // should fail; can't have empty exp after while
+//  if (n > ) {m = n;} else {m = n -1;} // should fail; can't have empty comparison
+//  if () { m = n + 1;} // should fail; can't have empty exp after if
+//  while () {n+1;} // should fail; can't have empty exp after while
 }

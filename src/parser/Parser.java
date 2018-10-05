@@ -313,7 +313,7 @@ public class Parser {
     }
     
     private void parseOtherExp() {
-    	if (accept(TokenClass.GT) || accept(TokenClass.LT) || accept(TokenClass.GE) || accept(TokenClass.LE) || accept(TokenClass.NE) || accept(TokenClass.EQ) || accept(TokenClass.PLUS) || accept(TokenClass.MINUS) || accept(TokenClass.ASTERIX) || accept(TokenClass.DIV) || accept(TokenClass.REM) || accept(TokenClass.OR) || accept(TokenClass.AND)) {
+    	if ((accept(TokenClass.GT) || accept(TokenClass.LT) || accept(TokenClass.GE) || accept(TokenClass.LE) || accept(TokenClass.NE) || accept(TokenClass.EQ) || accept(TokenClass.PLUS) || accept(TokenClass.MINUS) || accept(TokenClass.ASTERIX) || accept(TokenClass.DIV) || accept(TokenClass.REM) || accept(TokenClass.OR) || accept(TokenClass.AND)) && lookAhead(1).tokenClass != TokenClass.RPAR) {
     		nextToken();
     		parseExp();
     		parseOtherExp();
