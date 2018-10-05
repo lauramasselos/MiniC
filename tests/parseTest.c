@@ -32,3 +32,9 @@ void n (int a, int* b) {
 
   int* c; void d; char e[5]; struct f g;
 }
+
+int fundecl() {
+  int n;
+  struct test ing[10];
+  sizeof (int*) > test_1.test;
+}

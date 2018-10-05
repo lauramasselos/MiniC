@@ -211,9 +211,10 @@ public class Parser {
        //      | "return" [exp] ";"                    # return
          //    | exp "=" exp ";"                      # assignment
            //  | exp ";"                               # expression statement, e.g. a function call
+// first set:
+//“{“, “while”, “if”, “return”, “(“, IDENT, INT_LIT, “-“, CHAR_LIT, STRING_LIT, “*”, “sizeof”}
 
-
-    private void parseStmnt() {/*
+    private void parseStmnt() {
     	if (accept(TokenClass.LBRA)) parseBlock();
     	else if (accept(TokenClass.WHILE)) {
     		nextToken();
@@ -247,8 +248,9 @@ public class Parser {
     		else {
     			expect(TokenClass.ASSIGN);
     			parseExp();
+    			expect(TokenClass.SC);
     		}
-    	}*/
+    	}
     }
     // WORKS!! DON'T TOUCH!! (except maybe the statement line) 
     // block ::= "{" (vardecl)* (stmt)* "}"
@@ -264,7 +266,7 @@ public class Parser {
     		expect(TokenClass.RBRA);
     	}
     }
-    /*
+    
     private void parseExp() {
     	if (accept(TokenClass.LPAR) && lookAhead(1).tokenClass != TokenClass.INT  && lookAhead(1).tokenClass != TokenClass.CHAR && lookAhead(1).tokenClass != TokenClass.VOID && lookAhead(1).tokenClass != TokenClass.STRUCT) {
     		nextToken(); 	
@@ -371,9 +373,9 @@ public class Parser {
     	if (accept(TokenClass.COMMA)) {
     		nextToken();
     		parseExp();
-    		parseFunCallRep();			// might have to do something like if (!accept(TokenClass.RPAR)) parseFunCallRep();, wait for scoreboard update & try again
+    		parseFunCallRep();			
     	}
     }
-*/
+
     // to be completed ...
 }

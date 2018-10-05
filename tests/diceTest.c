@@ -2,7 +2,7 @@
 
 #include "minic-stdlib.h"
 
-int roll(void) {
+int roll() {
   int r = rand();
   int roll = (r % 6) + 1;
   return roll;

@@ -63,7 +63,6 @@ public class Tokeniser {
         if (Character.isWhitespace(c))
             return next();
         
-        if (c == -1) return new Token(TokenClass.EOF, line, column);
         if (c == '{') return new Token(TokenClass.LBRA, line, column);
         if (c == '}') return new Token(TokenClass.RBRA, line, column);
         if (c == '(') return new Token(TokenClass.LPAR, line, column);
@@ -100,19 +99,23 @@ public class Tokeniser {
        		else return new Token(TokenClass.DIV, line, column);
         }
  	   
-        
+        // #inclue() --> INVALID, RPAR
         if (c == '#') {
         	StringBuilder sb = new StringBuilder();
         	sb.append(c);
-        	if (scanner.peek() == -1 || Character.isWhitespace(scanner.peek())) return new Token(TokenClass.INVALID, line, column);
+        	if (scanner.peek() == -1 || Character.isWhitespace(scanner.peek())) {
+        		error (c, line, column);
+        		return new Token(TokenClass.INVALID, line, column);
+        	}
         	c = scanner.next();
         	while (Character.isLetterOrDigit(c)) {
         		sb.append(c);
         		if ((Character.isWhitespace(scanner.peek()) || scanner.peek() == -1) && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
-         	   if (Character.isDefined(scanner.peek()) && !(Character.isLetterOrDigit(scanner.peek())) && !(scanner.peek() == '_') && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
-         	   if ((Character.isWhitespace(scanner.peek()) || scanner.peek() == -1) && !(sb.toString().equals("#include"))) break;
-         	   c = scanner.next();
+        		if (Character.isDefined(scanner.peek()) && !(Character.isLetterOrDigit(scanner.peek())) && !(scanner.peek() == '_') && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
+        		if ((Character.isWhitespace(scanner.peek()) || scanner.peek() == -1) && !(sb.toString().equals("#include"))) break;
+        		c = scanner.next();
         	}
+        	error (c, line, column);
         	return new Token(TokenClass.INVALID, line, column);
         }
         
