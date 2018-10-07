@@ -216,14 +216,14 @@ public class Parser {
 
     private void parseStmnt() {
     	if (accept(TokenClass.LBRA)) parseBlock();
-    	else if (accept(TokenClass.WHILE) && lookAhead(2).tokenClass != TokenClass.RPAR) { 
+    	else if (accept(TokenClass.WHILE)) { 
     		nextToken();
     		expect(TokenClass.LPAR);
     		parseExp();
     		expect(TokenClass.RPAR);
     		parseStmnt();
     	}
-    	else if (accept(TokenClass.IF) && lookAhead(2).tokenClass != TokenClass.RPAR) { 
+    	else if (accept(TokenClass.IF)) { 
     		nextToken();
     		expect(TokenClass.LPAR);
     		parseExp();
@@ -319,15 +319,27 @@ public class Parser {
     		parseOtherExp();
     	}
     	else if (accept(TokenClass.LSBR)) {
-    		nextToken();
-    		parseExp();
-    		expect(TokenClass.RSBR);
+    		parseArrayAccess();
     		parseOtherExp();
     	}
     	else if (accept(TokenClass.DOT)) {
+    		parseFieldAccess();
+    		parseOtherExp();
+    	}
+    }
+    
+    private void parseArrayAccess () {
+    	if (accept(TokenClass.LSBR)) {
+    		nextToken();
+    		parseExp();
+    		expect(TokenClass.RSBR);
+    	}
+    }
+    
+    private void parseFieldAccess() {
+    	if (accept(TokenClass.DOT)) {
     		nextToken();
     		expect(TokenClass.IDENTIFIER);
-    		parseOtherExp();
     	}
     }
     
