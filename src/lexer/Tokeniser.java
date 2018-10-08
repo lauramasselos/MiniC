@@ -85,8 +85,9 @@ public class Tokeniser {
         		return next();
         	}
        		if (c == '*') {
+       			c = scanner.next(); // pointing at *
        			while (true) {
-       			   if (scanner.peek() == -1) break; // if we reach EOF without reaching end of comment, this is INVALID
+       			   if (scanner.peek() == (char) -1) break; // if we reach EOF without reaching end of comment, this is INVALID
         		   	c = scanner.next();
         		   		if (c == '*') {
         		   			if (scanner.peek() == '/') {
@@ -95,6 +96,8 @@ public class Tokeniser {
         		   			}
         		   		}
         			}
+       			error(c, line, column);
+       			return new Token(TokenClass.INVALID, line, column);
         		}
        		else return new Token(TokenClass.DIV, line, column);
         }
