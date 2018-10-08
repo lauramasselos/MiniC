@@ -1,0 +1,67 @@
+# #  comment
+# () grouping
+# [] optional
+# *  zero or more
+# +  one or more
+# |  alternative
+
+
+program    ::= includerep structdeclrep vardeclrep fundeclrep EOF
+
+includerep ::= include includerep | <e>
+
+structdeclrep ::= structdecl structdeclrep | <e>
+
+vardeclrep ::= vardecl vardeclrep | <e>
+
+fundeclrep ::= fundecl fundeclrep | <e>
+
+include    ::= "#include" STRING_LITERAL
+
+structdecl ::= structtype "{" vardecl vardeclrep "}" ";"    # structure declaration
+
+vardecl    ::= type IDENT ";"                       # normal declaration, e.g. int a;
+             | type IDENT "[" INT_LITERAL "]" ";"   # array declaration, e.g. int a[2];
+
+fundecl    ::= type IDENT "(" params ")" block    # function declaration
+
+type       ::= ("int" | "char" | "void" | structtype) starOpt
+structtype ::= "struct" IDENT
+starOpt ::= "*" | <e>
+
+params     ::= type IDENT paramsrep | <e>
+paramsrep ::= "," type IDENT | <e>
+
+stmt       ::= block
+             | "while" "(" exp ")" stmt              # while loop
+             | "if" "(" exp ")" stmt withElse   # if then else
+             | "return" expOpt ";"                    # return
+             | exp "=" exp ";"                      # assignment
+             | exp ";"                               # expression statement, e.g. a function call
+
+withElse ::= "else" stmnt | <e>
+expOpt ::= exp | <e>
+block      ::= "{" vardeclrep stmtrep "}"
+stmntrep ::= stmnt stmntrep | <e>
+
+exp        ::= "(" exp ")" otherExp
+             | (IDENT | INT_LITERAL) otherExp
+             | "-" exp otherExp
+             | CHAR_LITERAL otherExp
+             | STRING_LITERAL otherExp
+             | valueat otherExp | funcall otherExp | sizeof otherExp | typecast otherExp
+
+otherExp ::= arrayaccess otherExp 
+			| fieldaccess otherExp
+			| (">" | "<" | ">=" | "<=" | "!=" | "==" | "+" | "-" | "/" | "*" | "%" | "||" | "&&") otherExp
+			| <e>
+
+
+funcall      ::= IDENT "(" [ exp ("," exp)* ] ")"
+arrayaccess  ::= "[" exp "]"                  # array access
+fieldaccess  ::= "." IDENT                    # structure field member access
+valueat      ::= "*" exp                          # Value at operator (pointer indirection)
+sizeof       ::= "sizeof" "(" type ")"            # size of type
+typecast     ::= "(" type ")" exp                 # type casting
+
+
