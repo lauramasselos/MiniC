@@ -85,7 +85,7 @@ public class Tokeniser {
         		return next();
         	}
        		if (c == '*') {
-       			c = scanner.next(); // pointing at *
+       			c = scanner.next();
        			while (true) {
        			   if (scanner.peek() == (char) -1) break; // if we reach EOF without reaching end of comment, this is INVALID
         		   	c = scanner.next();
@@ -106,16 +106,16 @@ public class Tokeniser {
         if (c == '#') {
         	StringBuilder sb = new StringBuilder();
         	sb.append(c);
-        	if (scanner.peek() == -1 || Character.isWhitespace(scanner.peek())) {
+        	if (scanner.peek() == (char) -1 || Character.isWhitespace(scanner.peek())) {
         		error (c, line, column);
         		return new Token(TokenClass.INVALID, line, column);
         	}
         	c = scanner.next();
         	while (Character.isLetterOrDigit(c)) {
         		sb.append(c);
-        		if ((Character.isWhitespace(scanner.peek()) || scanner.peek() == -1) && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
+        		if ((Character.isWhitespace(scanner.peek()) || scanner.peek() == (char) -1) && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
         		if (Character.isDefined(scanner.peek()) && !(Character.isLetterOrDigit(scanner.peek())) && !(scanner.peek() == '_') && sb.toString().equals("#include")) return new Token(TokenClass.INCLUDE, line, column);
-        		if ((Character.isWhitespace(scanner.peek()) || scanner.peek() == -1) && !(sb.toString().equals("#include"))) break;
+        		if ((Character.isWhitespace(scanner.peek()) || scanner.peek() == (char) -1) && !(sb.toString().equals("#include"))) break;
         		c = scanner.next();
         	}
         	error (c, line, column);

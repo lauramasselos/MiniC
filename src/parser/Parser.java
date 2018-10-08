@@ -249,16 +249,16 @@ public class Parser {
     	else if (accept(TokenClass.RETURN)) {
     		nextToken();
     		if (accept(TokenClass.SC)) nextToken();
-    		else {
+    		else if (accept(TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF)){
     			parseExp();
     			expect(TokenClass.SC);
     		}
-    	}
-    	else {
+    	} // 
+    	else if (accept(TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF)) {
     		parseExp();
     		if (accept(TokenClass.SC)) nextToken();
-    		else {
-    			expect(TokenClass.ASSIGN);
+    		else if (accept(TokenClass.ASSIGN)) {
+    			nextToken();
     			parseExp();
     			expect(TokenClass.SC);
     		}
@@ -322,6 +322,7 @@ public class Parser {
     		parseTypeCast();
     		parseOtherExp();
     	}
+    	else error(TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF);
     }
     
     private void parseOtherExp() {
