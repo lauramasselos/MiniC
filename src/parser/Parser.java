@@ -119,7 +119,19 @@ public class Parser {
         return result;
     }
 
-
+/*	LAST COMMIT ERRORS:			(October 8)
+ * 
+ * int (expected 245, returned 0)
+ * no_main (expected 245, returned 0)
+ * just_main (expected 245, returned 0)
+ * while_loop_3 (expected 245, returned 0)
+ * empty_comparison (expected 245, returned 124)
+ * identifier_missing_type (expected 245, returned 0)
+ * variable_initialization (expected 245, returned 0)
+ * 
+ * empty_conditional (expected 245, returned 124) error has been removed at last commit (on Oct 7)
+ * 
+ */
     private void parseProgram() {
         parseIncludes();
         parseStructDecls();
