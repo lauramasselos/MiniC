@@ -239,7 +239,7 @@ public class Tokeniser {
       	   c = scanner.next();
       	   char p = scanner.peek();
       	   
-      	   while (c != '\"') {
+      	   while (c != '\"' && c != '\n' && c != '\r') {
       		   if (c == '\\') {
       			   switch (p) {
       			   	case 't': sb.append('\t');  break;
