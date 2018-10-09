@@ -260,6 +260,7 @@ public class Parser {
     			parseExp();
     			expect(TokenClass.SC);
     		}
+    		else error(TokenClass.SC, TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF);
     	} 
     	else if (accept(TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF)) {
     		parseExp();
@@ -269,6 +270,7 @@ public class Parser {
     			parseExp();
     			expect(TokenClass.SC);
     		}
+    		else error(TokenClass.SC, TokenClass.ASSIGN);
     	}
     }
     // block ::= "{" (vardecl)* (stmt)* "}"
