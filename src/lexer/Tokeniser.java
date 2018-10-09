@@ -215,7 +215,8 @@ public class Tokeniser {
       		   }
       		   c = scanner.next();
       	   }
-      	   else if (c != '\\' && c != '\'') sb.append(c);
+      	   else if (c != '\\' && c != '\'' && c != '\n' && c != '\r') sb.append(c);
+      	   else error(c, line, column);
       	 
       	 c = scanner.next();
       	 

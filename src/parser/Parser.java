@@ -119,18 +119,18 @@ public class Parser {
         return result;
     }
 
-/*	LAST COMMIT ERRORS:			(October 8)
+/*	LAST COMMIT ERRORS:			(October 9)
  * 
  * int (expected 245, returned 0)
  * no_main (expected 245, returned 0)
  * just_main (expected 245, returned 0)
- * while_loop_3 (expected 245, returned 0)
- * empty_comparison (expected 245, returned 124)
  * identifier_missing_type (expected 245, returned 0)
  * variable_initialization (expected 245, returned 0)
+ * NEW ERROR unterminated_stmnt (expected 245, returned 0)
  * 
  * empty_conditional (expected 245, returned 124) error has been removed at last commit (on Oct 7)
- * 
+ * while_loop_3 (expected 245, returned 0) error has been removed at last commit (on Oct 8)
+ * empty_comparison (expected 245, returned 124) error has been removed at last commit (on Oct 8)
  */
     private void parseProgram() {
         parseIncludes();
@@ -148,7 +148,7 @@ public class Parser {
             parseIncludes();
         }
     }
-// WORKS!! DON'T TOUCH!! structdecl ::= "struct" IDENT "{" (vardecl)+ "}" ";"
+// structdecl ::= "struct" IDENT "{" (vardecl)+ "}" ";"
     private void parseStructDecls() {
         if (accept(TokenClass.STRUCT) && lookAhead(2).tokenClass == TokenClass.LBRA) {
         	nextToken();
@@ -160,37 +160,44 @@ public class Parser {
         	parseStructDecls();
         }
     }
-// WORKS!! DON'T TOUCH!! vardecl    ::= type IDENT ";"| type IDENT "[" INT_LITERAL "]" ";"
+//  vardecl ::= type IDENT ";"| type IDENT "[" INT_LITERAL "]" ";"
 
     private void parseVarDecls() {
-        parseTypes();
-        if (accept(TokenClass.IDENTIFIER) && lookAhead(1).tokenClass == TokenClass.SC) {
-        	nextToken();
-        	nextToken();
-        	parseVarDecls();
-       }
-        else if (accept(TokenClass.IDENTIFIER) && lookAhead(1).tokenClass == TokenClass.LSBR) {
-        	nextToken();
-        	nextToken();
-        	expect(TokenClass.INT_LITERAL);
-        	expect(TokenClass.RSBR);
-        	expect(TokenClass.SC);
-        	parseVarDecls();
-        }
+    	if ((accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && (lookAhead(2).tokenClass == TokenClass.SC || lookAhead(2).tokenClass == TokenClass.LSBR)) || (accept(TokenClass.STRUCT) && (lookAhead(3).tokenClass == TokenClass.SC || lookAhead(3).tokenClass == TokenClass.LSBR))) {
+    		parseTypes();
+            if (accept(TokenClass.IDENTIFIER) && lookAhead(1).tokenClass == TokenClass.SC) {
+            	nextToken();
+            	nextToken();
+            	parseVarDecls();
+           }
+            else if (accept(TokenClass.IDENTIFIER) && lookAhead(1).tokenClass == TokenClass.LSBR) {
+            	nextToken();
+            	nextToken();
+            	expect(TokenClass.INT_LITERAL);
+            	expect(TokenClass.RSBR);
+            	expect(TokenClass.SC);
+            	parseVarDecls();
+            }
+            else if ((accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && (lookAhead(2).tokenClass != TokenClass.SC && lookAhead(2).tokenClass != TokenClass.LSBR)) || (accept(TokenClass.STRUCT) && (lookAhead(3).tokenClass != TokenClass.SC && lookAhead(3).tokenClass != TokenClass.LSBR))) {
+            	parseFunDecls();
+            }
+    	}
+    	
+        
     }
 // fundecl ::= type IDENT "(" params ")" block
     private void parseFunDecls() {
+    	if ((accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && (lookAhead(2).tokenClass == TokenClass.LPAR)) || (accept(TokenClass.STRUCT) && (lookAhead(3).tokenClass == TokenClass.LPAR))) {
     		parseTypes();
-    		if (accept(TokenClass.IDENTIFIER) && lookAhead(1).tokenClass == TokenClass.LPAR) {
-    			nextToken();
-    			nextToken();
-    			if (!accept(TokenClass.RPAR)) parseParams();
-    			expect(TokenClass.RPAR);
-    			parseBlock();
-    			parseFunDecls();
-    		}
+    		expect(TokenClass.IDENTIFIER);
+    		expect(TokenClass.LPAR);
+    		if (!accept(TokenClass.RPAR)) parseParams();
+    		expect(TokenClass.RPAR);
+    		parseBlock();
+    		parseFunDecls();
+    	}
     }
- // WORKS!! DON'T TOUCH!!  types ::= ("int" | "void" | "char" | "struct" IDENT) ["*"]
+ // types ::= ("int" | "void" | "char" | "struct" IDENT) ["*"]
     private void parseTypes() {
     	if (accept(TokenClass.INT) || accept(TokenClass.CHAR) || accept(TokenClass.VOID)) {
     		nextToken();
@@ -201,8 +208,9 @@ public class Parser {
     		expect(TokenClass.IDENTIFIER);
     		if (accept(TokenClass.ASTERIX)) nextToken();
     	}
+    	else error(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR, TokenClass.STRUCT);
     }  
- // WORKS!! DON'T TOUCH!! params ::= [ type IDENT ("," type IDENT)* ]   
+ // params ::= [ type IDENT ("," type IDENT)* ]   
     private void parseParams() {
     	parseTypes();
     	expect(TokenClass.IDENTIFIER);
@@ -217,14 +225,13 @@ public class Parser {
     		if (accept(TokenClass.COMMA)) parseParamsRep();
     	}
     }
- //    stmt       ::= block
-   //          | "while" "(" exp ")" stmt              # while loop
-     //        | "if" "(" exp ")" stmt ["else" stmt]   # if then else
-       //      | "return" [exp] ";"                    # return
-         //    | exp "=" exp ";"                      # assignment
-           //  | exp ";"                               # expression statement, e.g. a function call
-// first set:
-//“{“, “while”, “if”, “return”, “(“, IDENT, INT_LIT, “-“, CHAR_LIT, STRING_LIT, “*”, “sizeof”}
+//     stmt       ::= block
+//             | "while" "(" exp ")" stmt              # while loop
+//             | "if" "(" exp ")" stmt ["else" stmt]   # if then else
+//             | "return" [exp] ";"                    # return
+//             | exp "=" exp ";"                      # assignment
+//             | exp ";"                               # expression statement, e.g. a function call
+// first set = “{“, “while”, “if”, “return”, “(“, IDENT, INT_LIT, “-“, CHAR_LIT, STRING_LIT, “*”, “sizeof”}
 
     private void parseStmnt() {
     	if (accept(TokenClass.LBRA)) parseBlock();
@@ -253,7 +260,7 @@ public class Parser {
     			parseExp();
     			expect(TokenClass.SC);
     		}
-    	} // 
+    	} 
     	else if (accept(TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF)) {
     		parseExp();
     		if (accept(TokenClass.SC)) nextToken();
@@ -264,7 +271,6 @@ public class Parser {
     		}
     	}
     }
-    // WORKS!! DON'T TOUCH!! (except maybe the statement line) 
     // block ::= "{" (vardecl)* (stmt)* "}"
     private void parseBlock() {
     	if (accept(TokenClass.LBRA) && lookAhead(1).tokenClass == TokenClass.RBRA ) {
@@ -273,10 +279,11 @@ public class Parser {
     	}
     	else if (accept(TokenClass.LBRA)) {
     		nextToken();
-    		while (accept(TokenClass.INT) || accept(TokenClass.CHAR) || accept(TokenClass.VOID) || accept(TokenClass.STRUCT)) parseVarDecls();
-    		while (accept(TokenClass.LBRA) || accept(TokenClass.WHILE) ||accept(TokenClass.IF) || accept(TokenClass.RETURN) ||accept(TokenClass.LPAR) || accept(TokenClass.IDENTIFIER) || accept(TokenClass.INT_LITERAL) || accept(TokenClass.MINUS) || accept(TokenClass.CHAR_LITERAL) || accept(TokenClass.STRING_LITERAL) || accept(TokenClass.ASTERIX) || accept(TokenClass.SIZEOF)) parseStmnt();
+    		while (accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID, TokenClass.STRUCT)) parseVarDecls();
+    		while (accept(TokenClass.LBRA, TokenClass.WHILE, TokenClass.IF, TokenClass.RETURN, TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF)) parseStmnt();
     		expect(TokenClass.RBRA);
     	}
+    	else error(TokenClass.LBRA);
     }
     // first = {“(“, IDENT, INT_LITERAL, “-“, CHAR_LITERAL, STRING_LITERAL, “*”, “sizeof”}
     private void parseExp() {
@@ -338,7 +345,7 @@ public class Parser {
     	else if (accept(TokenClass.DOT)) {
     		parseFieldAccess();
     		parseOtherExp();
-    	}
+    	} // no error here, since parseOtherExp() can be empty!
     }
     
     private void parseArrayAccess () {
