@@ -119,18 +119,10 @@ public class Parser {
         return result;
     }
 
-/*	LAST COMMIT ERRORS:			(October 9)
+/*	LAST COMMIT ERRORS:			(October 10)
  * 
- * int (expected 245, returned 0)
- * no_main (expected 245, returned 0)
- * just_main (expected 245, returned 0)
- * identifier_missing_type (expected 245, returned 0)
- * variable_initialization (expected 245, returned 0)
- * NEW ERROR unterminated_stmnt (expected 245, returned 0)
- * 
- * empty_conditional (expected 245, returned 124) error has been removed at last commit (on Oct 7)
- * while_loop_3 (expected 245, returned 0) error has been removed at last commit (on Oct 8)
- * empty_comparison (expected 245, returned 124) error has been removed at last commit (on Oct 8)
+ * struct_declaration (expected 0, returned 245)
+ * variable_initialization (expected 245, returned 124)
  */
     private void parseProgram() {
         parseIncludes();
@@ -163,7 +155,10 @@ public class Parser {
 //  vardecl ::= type IDENT ";"| type IDENT "[" INT_LITERAL "]" ";"
 
     private void parseVarDecls() {
-    	if ((accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && (lookAhead(2).tokenClass == TokenClass.SC || lookAhead(2).tokenClass == TokenClass.LSBR)) || (accept(TokenClass.STRUCT) && (lookAhead(3).tokenClass == TokenClass.SC || lookAhead(3).tokenClass == TokenClass.LSBR))) {
+    	if((accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && lookAhead(1).tokenClass == TokenClass.ASTERIX && (lookAhead(3).tokenClass == TokenClass.SC || lookAhead(3).tokenClass == TokenClass.LSBR))
+    	|| (accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && lookAhead(1).tokenClass == TokenClass.IDENTIFIER && (lookAhead(2).tokenClass == TokenClass.SC || lookAhead(2).tokenClass == TokenClass.LSBR))
+    	|| (accept(TokenClass.STRUCT) && lookAhead(2).tokenClass == TokenClass.ASTERIX && (lookAhead(4).tokenClass == TokenClass.SC || lookAhead(4).tokenClass == TokenClass.LSBR))
+    	|| (accept(TokenClass.STRUCT) && lookAhead(2).tokenClass == TokenClass.IDENTIFIER && (lookAhead(3).tokenClass == TokenClass.SC || lookAhead(3).tokenClass == TokenClass.LSBR))) {
     		parseTypes();
             if (accept(TokenClass.IDENTIFIER) && lookAhead(1).tokenClass == TokenClass.SC) {
             	nextToken();
@@ -199,7 +194,7 @@ public class Parser {
     }
  // types ::= ("int" | "void" | "char" | "struct" IDENT) ["*"]
     private void parseTypes() {
-    	if (accept(TokenClass.INT) || accept(TokenClass.CHAR) || accept(TokenClass.VOID)) {
+    	if (accept(TokenClass.INT, TokenClass.VOID, TokenClass.CHAR)) {
     		nextToken();
     		if (accept(TokenClass.ASTERIX)) nextToken();
     	}
