@@ -155,7 +155,7 @@ public class Parser {
 //  vardecl ::= type IDENT ";"| type IDENT "[" INT_LITERAL "]" ";"
 
     private void parseVarDecls() {
-    	if((accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && lookAhead(1).tokenClass == TokenClass.ASTERIX && (lookAhead(3).tokenClass == TokenClass.SC || lookAhead(3).tokenClass == TokenClass.LSBR))
+    	if ((accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && lookAhead(1).tokenClass == TokenClass.ASTERIX && (lookAhead(3).tokenClass == TokenClass.SC || lookAhead(3).tokenClass == TokenClass.LSBR))
     	|| (accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && lookAhead(1).tokenClass == TokenClass.IDENTIFIER && (lookAhead(2).tokenClass == TokenClass.SC || lookAhead(2).tokenClass == TokenClass.LSBR))
     	|| (accept(TokenClass.STRUCT) && lookAhead(2).tokenClass == TokenClass.ASTERIX && (lookAhead(4).tokenClass == TokenClass.SC || lookAhead(4).tokenClass == TokenClass.LSBR))
     	|| (accept(TokenClass.STRUCT) && lookAhead(2).tokenClass == TokenClass.IDENTIFIER && (lookAhead(3).tokenClass == TokenClass.SC || lookAhead(3).tokenClass == TokenClass.LSBR))) {
@@ -173,16 +173,15 @@ public class Parser {
             	expect(TokenClass.SC);
             	parseVarDecls();
             }
-            else if ((accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && (lookAhead(2).tokenClass != TokenClass.SC && lookAhead(2).tokenClass != TokenClass.LSBR)) || (accept(TokenClass.STRUCT) && (lookAhead(3).tokenClass != TokenClass.SC && lookAhead(3).tokenClass != TokenClass.LSBR))) {
-            	parseFunDecls();
-            }
+            else parseFunDecls();
     	}
-    	
-        
     }
 // fundecl ::= type IDENT "(" params ")" block
     private void parseFunDecls() {
-    	if ((accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && (lookAhead(2).tokenClass == TokenClass.LPAR)) || (accept(TokenClass.STRUCT) && (lookAhead(3).tokenClass == TokenClass.LPAR))) {
+    	if ((accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && lookAhead(1).tokenClass == TokenClass.ASTERIX && lookAhead(3).tokenClass == TokenClass.LPAR)
+    	|| (accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && lookAhead(1).tokenClass == TokenClass.IDENTIFIER && lookAhead(2).tokenClass == TokenClass.LPAR)
+    	|| (accept(TokenClass.STRUCT) && lookAhead(2).tokenClass == TokenClass.ASTERIX && lookAhead(4).tokenClass == TokenClass.LPAR)
+    	|| (accept(TokenClass.STRUCT) && lookAhead(2).tokenClass == TokenClass.IDENTIFIER && lookAhead(3).tokenClass == TokenClass.LPAR)) {
     		parseTypes();
     		expect(TokenClass.IDENTIFIER);
     		expect(TokenClass.LPAR);
@@ -276,7 +275,7 @@ public class Parser {
     	}
     	else if (accept(TokenClass.LBRA)) {
     		nextToken();
-    		while (accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID, TokenClass.STRUCT)) parseVarDecls();
+    		if (accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID, TokenClass.STRUCT)) parseVarDecls();
     		while (accept(TokenClass.LBRA, TokenClass.WHILE, TokenClass.IF, TokenClass.RETURN, TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF)) parseStmnt();
     		expect(TokenClass.RBRA);
     	}
