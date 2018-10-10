@@ -4,3 +4,4 @@ struct s1 {
   int n;
   char* c;
 };
+// should pass parser

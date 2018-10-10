@@ -1,1 +1,2 @@
+// should fail lexer
 ',
