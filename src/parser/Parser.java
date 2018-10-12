@@ -1,10 +1,13 @@
 package parser;
 
+import ast.*;
+
 import lexer.Token;
 import lexer.Tokeniser;
 import lexer.Token.TokenClass;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 
@@ -26,11 +29,11 @@ public class Parser {
         this.tokeniser = tokeniser;
     }
 
-    public void parse() {
+    public Program parse() {
         // get the first token
         nextToken();
 
-        parseProgram();
+        return parseProgram();
     }
 
     public int getErrorCount() {
@@ -119,17 +122,23 @@ public class Parser {
         return result;
     }
 
+<<<<<<< HEAD
 /*	LAST COMMIT ERRORS:			(October 10)
  * 
  * struct_declaration (expected 0, returned 245)
  * variable_initialization (expected 245, returned 124)
  */
     private void parseProgram() {
+=======
+
+    
+>>>>>>> 4b7cd8d310c7373cbaee99c0cc32d333151136b8
         parseIncludes();
-        parseStructDecls();
-        parseVarDecls();
-        parseFunDecls();
+        List<StructTypeDecl> stds = parseStructDecls();
+        List<VarDecl> vds = parseVarDecls();
+        List<FunDecl> fds = parseFunDecls();
         expect(TokenClass.EOF);
+        return new Program(stds, vds, fds);
     }
 
     // includes are ignored, so does not need to return an AST node
@@ -140,6 +149,7 @@ public class Parser {
             parseIncludes();
         }
     }
+<<<<<<< HEAD
 // structdecl ::= "struct" IDENT "{" (vardecl)+ "}" ";"
     private void parseStructDecls() {
         if (accept(TokenClass.STRUCT) && lookAhead(2).tokenClass == TokenClass.LBRA) {
@@ -151,9 +161,14 @@ public class Parser {
         	expect(TokenClass.SC);
         	parseStructDecls();
         }
+=======
+
+    
+>>>>>>> 4b7cd8d310c7373cbaee99c0cc32d333151136b8
     }
 //  vardecl ::= type IDENT ";"| type IDENT "[" INT_LITERAL "]" ";"
 
+<<<<<<< HEAD
     private void parseVarDecls() {
     	if ((accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && lookAhead(1).tokenClass == TokenClass.ASTERIX && (lookAhead(3).tokenClass == TokenClass.SC || lookAhead(3).tokenClass == TokenClass.LSBR))
     	|| (accept(TokenClass.INT, TokenClass.CHAR, TokenClass.VOID) && lookAhead(1).tokenClass == TokenClass.IDENTIFIER && (lookAhead(2).tokenClass == TokenClass.SC || lookAhead(2).tokenClass == TokenClass.LSBR))
@@ -404,5 +419,8 @@ public class Parser {
     		parseExp();
     		parseFunCallRep();			
     	}
+=======
+    
+>>>>>>> 4b7cd8d310c7373cbaee99c0cc32d333151136b8
     }
 }
