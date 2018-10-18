@@ -1,7 +1,16 @@
 package ast;
 
-public class StructTypeDecl implements ASTNode {
+import java.util.List;
 
+//StructTypeDecl ::= StructType VarDecl*
+public class StructTypeDecl implements ASTNode {
+	public final StructType structType;
+    public final List<VarDecl> varDecls;
+    
+    public StructTypeDecl(StructType structType, List<VarDecl> varDecls) {
+    	this.structType = structType;
+    	this.varDecls = varDecls;
+    }
 
     // to be completed
 

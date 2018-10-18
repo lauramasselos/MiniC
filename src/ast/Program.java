@@ -1,5 +1,5 @@
 package ast;
-
+// Program    ::= StructTypeDecl* VarDecl* FunDecl*
 import java.util.List;
 
 public class Program implements ASTNode {

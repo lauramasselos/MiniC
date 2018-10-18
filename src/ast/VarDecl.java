@@ -1,5 +1,5 @@
 package ast;
-
+//VarDecl    ::= Type String
 public class VarDecl implements ASTNode {
     public final Type type;
     public final String varName;
