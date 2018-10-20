@@ -262,7 +262,6 @@ public class Tokeniser {
       	   }
       	   
       	   if (c == '"') {
-      		   c = scanner.next();
           	   return new Token(TokenClass.STRING_LITERAL, sb.toString(), line, column);
       	   }
       	   else {

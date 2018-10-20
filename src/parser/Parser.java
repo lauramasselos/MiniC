@@ -155,7 +155,7 @@ public class Parser {
         	List<VarDecl> vds =  parseVarDecls();
         	expect(TokenClass.RBRA);
         	expect(TokenClass.SC);
-        	StructTypeDecl std = new StructTypeDecl(new StructType(name),vds); 
+        	StructTypeDecl std = new StructTypeDecl(new StructType(name), vds); 
         	List<StructTypeDecl> stds = parseStructDecls(); 
         	stds.add(0, std);
         	return stds;
@@ -352,8 +352,8 @@ public class Parser {
     		else error(TokenClass.SC, TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF);
     	} 
     	else if (accept(TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF)) {
-    		Expr lhs, rhs;
-    		lhs = parseExp();
+    		Expr rhs = null;
+    		Expr lhs = parseExp();
     		if (accept(TokenClass.SC)) {
     			nextToken();
     			return new ExprStmt(lhs);
