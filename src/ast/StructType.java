@@ -1,7 +1,7 @@
 package ast;
 
 //StructType  ::= String
-public class StructType implements ASTNode {
+public class StructType implements Type {
 	public final String name;
     
     public StructType(String name) {

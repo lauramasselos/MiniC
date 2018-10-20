@@ -1,6 +1,6 @@
 package ast;
 
-public class PointerType implements ASTNode {
+public class PointerType implements Type {
     public final Type type;
 
     public PointerType(Type type) {
