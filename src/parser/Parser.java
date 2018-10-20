@@ -123,10 +123,18 @@ public class Parser {
     }
 
 
-/*	LAST COMMIT ERRORS:			(October 10)
+/*	LAST COMMIT ERRORS:			(October 20)
  * 
- * struct_declaration (expected 0, returned 245)
- * variable_initialization (expected 245, returned 124)
+ * CURRENT SCORE: (74/75); (42/94)
+ * 
+ * PARSER ERRORS
+ * struct_wrong (expected 245, returned 1)
+ * 
+ * AST ERRORS (all expected 0, returned 224)
+ * arithmetics_plus_mul
+ * arithmetics_division
+ * unary_operator_2
+ * return_4
  */
     private Program parseProgram() {
         parseIncludes();
