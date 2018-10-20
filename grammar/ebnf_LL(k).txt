@@ -55,6 +55,21 @@ otherExp ::= arrayaccess otherExp
 			| fieldaccess otherExp
 			| (">" | "<" | ">=" | "<=" | "!=" | "==" | "+" | "-" | "/" | "*" | "%" | "||" | "&&") otherExp
 			| <e>
+	/*		
+
+exp ::= orexp
+
+orexp ::= andexp ("||" andexp)*
+andexp ::= eqexp ("&&" eqexp)*
+eqexp ::= relexp (( "==" | "!=" ) relexp)*
+relexp ::= addexp (( "<"| ">" | "<=" | ">=" ) addexp)*
+addexp ::= mulexp (( "+" | "-" ) mulexp)*
+mulexp ::= diffexp (( "*" | "/" ) diffexp)*
+diffexp ::= secondaryexp (( sizeof(type) | * | (type) | - ) secondaryexp)*
+secondaryexp ::= primaryexp (( . | [] | () ) primaryexp) *
+primaryexp ::= IDENT | INT_LITERAL | CHAR_LITERAL | STRING_LITERAL
+
+*/
 
 
 funcall      ::= IDENT "(" [ exp ("," exp)* ] ")"
