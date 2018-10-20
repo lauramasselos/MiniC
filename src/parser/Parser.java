@@ -181,7 +181,7 @@ public class Parser {
             	nextToken();
             	VarDecl vd = new VarDecl(type, varName);
             	List<VarDecl> vds = parseVarDecls();
-            	vds.add(0, vd);
+            	vds.add(0,vd);
             	return vds;
            }
             else if (accept(TokenClass.IDENTIFIER) && lookAhead(1).tokenClass == TokenClass.LSBR) {
@@ -202,7 +202,7 @@ public class Parser {
     	}
     	
     	else {
-    		return null;
+    		return new LinkedList<VarDecl>();
     	}
 
     }
@@ -322,8 +322,7 @@ public class Parser {
     		Expr e = parseExp();
     		expect(TokenClass.RPAR);
     		Stmt s = parseStmnt();
-    		While w = new While(e, s);
-    		return w;
+    		return new While(e, s);
     	}
     	else if (accept(TokenClass.IF)) {
     		Stmt s2 = null;
@@ -371,7 +370,7 @@ public class Parser {
     			return null;
     		}
     	}
-    	else return null;
+		return null;
     }
     // block ::= "{" (vardecl)* (stmt)* "}"
     private Block parseBlock() {
@@ -402,54 +401,61 @@ public class Parser {
     	Expr e;
     	if (accept(TokenClass.LPAR) && lookAhead(1).tokenClass != TokenClass.INT  && lookAhead(1).tokenClass != TokenClass.CHAR && lookAhead(1).tokenClass != TokenClass.VOID && lookAhead(1).tokenClass != TokenClass.STRUCT) {
     		nextToken(); 	
-    		parseExp();
+    		e = parseExp();
     		expect(TokenClass.RPAR);
-    		parseOtherExp();
+    		return parseOtherExp(e);
     	}
     	else if (accept(TokenClass.IDENTIFIER)) {
-    		if (lookAhead(1).tokenClass == TokenClass.LPAR) parseFunCall();
+    		if (lookAhead(1).tokenClass == TokenClass.LPAR) {
+    			e = parseFunCall();
+    			return parseOtherExp(e);
+    		}
     		else {
-    			nextToken();
-    			parseOtherExp();
+    			String id = expect(TokenClass.IDENTIFIER).data;
+    			e = new VarExpr(id);
+    			return parseOtherExp(e);
     		}
     	}
     	else if (accept(TokenClass.INT_LITERAL)) {
     		int n = Integer.parseInt(expect(TokenClass.INT_LITERAL).data);
     		IntLiteral int_lit = new IntLiteral(n);
     		e = int_lit;
-    		parseOtherExp();
+    		return parseOtherExp(e);
     	}
     	else if (accept(TokenClass.MINUS)) {
     		nextToken();
     		e = parseExp();
-    		parseOtherExp();
+    		return parseOtherExp(e);
     	}
     	else if (accept(TokenClass.CHAR_LITERAL)) {
     		String str = expect(TokenClass.CHAR_LITERAL).data;
     		char c = str.charAt(0);
     		ChrLiteral chr_lit = new ChrLiteral(c);
     		e = chr_lit;
-    		parseOtherExp();
+    		return parseOtherExp(e);
     	}
     	else if (accept(TokenClass.STRING_LITERAL)) {
     		String str = expect(TokenClass.STRING_LITERAL).data;
     		StrLiteral str_lit = new StrLiteral(str);
     		e = str_lit;
-    		parseOtherExp();
+    		return parseOtherExp(e);
     	}
     	else if (accept(TokenClass.ASTERIX)) {
-    		parseValueAt();
-    		parseOtherExp();
+    		e = parseValueAt();
+    		return parseOtherExp(e);
     	}
     	else if (accept(TokenClass.SIZEOF)) {
-    		parseSizeOf();
-    		parseOtherExp();
+    		e = parseSizeOf();
+    		return parseOtherExp(e);
     	}
     	else if (accept(TokenClass.LPAR) && (lookAhead(1).tokenClass == TokenClass.INT || lookAhead(1).tokenClass == TokenClass.CHAR || lookAhead(1).tokenClass == TokenClass.VOID || lookAhead(1).tokenClass == TokenClass.STRUCT)) {
-    		parseTypeCast();
-    		parseOtherExp();
+    		e = parseTypeCast();
+    		return parseOtherExp(e);
     	}
-    	else error(TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF);
+    	else {
+    		error(TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF);
+    		return new StrLiteral("no u");
+    	}
     }
     
     private Expr parseOtherExp(Expr lhs) {
@@ -473,15 +479,15 @@ public class Parser {
 		}
     		rhs = parseExp();
     		e = new BinOp(lhs, op, rhs);
-    		parseOtherExp(e);
+    		return parseOtherExp(e);
     	}
     	else if (accept(TokenClass.LSBR)) {
     		Expr e = parseArrayAccess(lhs);
-    		parseOtherExp(e);
+    		return parseOtherExp(e);
     	}
     	else if (accept(TokenClass.DOT)) {
     		Expr e = parseFieldAccess(lhs);
-    		parseOtherExp(e);
+    		return parseOtherExp(e);
     	} // no error here, since parseOtherExp() can be empty!
     	return lhs;
     }
@@ -509,48 +515,53 @@ public class Parser {
     private ValueAtExpr parseValueAt() {
     	if (accept(TokenClass.ASTERIX)) {
     		nextToken();
-    		parseExp();
+    		Expr e = parseExp();
+    		return new ValueAtExpr(e);
     	}
+    	return null;
     }
     
     private SizeOfExpr parseSizeOf() {
     	if (accept(TokenClass.SIZEOF)) {
     		nextToken();
     		expect(TokenClass.LPAR);
-    		parseTypes();
+    		Type type = parseTypes();
     		expect(TokenClass.RPAR);
+    		return new SizeOfExpr(type);
     	}
+    	return null;
     }
     
     private TypecastExpr parseTypeCast() {
     	if (accept(TokenClass.LPAR)) {
     		nextToken();
-    		parseTypes();
+    		Type type = parseTypes();
     		expect(TokenClass.RPAR);
-    		parseExp();
+    		Expr e = parseExp();
+    		return new TypecastExpr(type, e);
     	}
+    	return null;
     }
   // FunCallExpr ::= Strint Expr*  
     private FunCallExpr parseFunCall() {
     	if (accept(TokenClass.IDENTIFIER)) {
-    		nextToken();
+    		String name = expect(TokenClass.IDENTIFIER).data;
+    		List<Expr> exps = new LinkedList<>();
     		expect(TokenClass.LPAR);
-    		if (accept(TokenClass.RPAR)) nextToken();
+    		if (accept(TokenClass.RPAR)) {
+    			nextToken();
+    		}
     		else {
-    			parseExp();
-    			if (accept(TokenClass.COMMA)) parseFunCallRep();
+    			Expr e = parseExp();
+    			exps.add(e);
+    			while (accept(TokenClass.COMMA)) {
+    				exps.add(parseExp());
+    			}
     			expect(TokenClass.RPAR);
     		}
-    		parseOtherExp();
+    		return new FunCallExpr(name, exps);
     	}
+    	return null;
     }
-    
-    private void parseFunCallRep() {
-    	if (accept(TokenClass.COMMA)) {
-    		nextToken();
-    		parseExp();
-    		parseFunCallRep();			
-    	}
 
-    }
 }

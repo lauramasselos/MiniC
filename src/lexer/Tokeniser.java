@@ -196,7 +196,7 @@ public class Tokeniser {
         
         if (c == '\'') {
         	StringBuilder sb = new StringBuilder();
-        	sb.append(c);
+        	//sb.append(c);
       	   c = scanner.next();
       	   char p = scanner.peek();
       	   
@@ -221,7 +221,7 @@ public class Tokeniser {
       	 c = scanner.next();
       	 
       	 if (c == '\'') {
-      		 sb.append(c);
+      		 //sb.append(c);
       		 return new Token(TokenClass.CHAR_LITERAL, sb.toString(), line, column);
       	 }
       	 else {
@@ -235,7 +235,6 @@ public class Tokeniser {
         
         if (c == '\"') {
         	StringBuilder sb = new StringBuilder();
-        	sb.append(c);
       	   c = scanner.next();
       	   char p = scanner.peek();
       	   
@@ -262,8 +261,15 @@ public class Tokeniser {
       		   p = scanner.peek();
       	   }
       	   
-      	   sb.append(c);
-      	   return new Token(TokenClass.STRING_LITERAL, sb.toString(), line, column);
+      	   if (c == '"') {
+      		   c = scanner.next();
+          	   return new Token(TokenClass.STRING_LITERAL, sb.toString(), line, column);
+      	   }
+      	   else {
+      		   error(c, line, column);
+      		   return new Token(TokenClass.INVALID, line, column);
+      	   }
+
         }
         	
         
