@@ -64,10 +64,10 @@ andexp ::= eqexp ("&&" eqexp)*
 eqexp ::= relexp (( "==" | "!=" ) relexp)*
 relexp ::= addexp (( "<"| ">" | "<=" | ">=" ) addexp)*
 addexp ::= mulexp (( "+" | "-" ) mulexp)*
-mulexp ::= diffexp (( "*" | "/" ) diffexp)*
-diffexp ::= secondaryexp (( sizeof(type) | * | (type) | - ) secondaryexp)*
-secondaryexp ::= primaryexp (( . | [] | () ) primaryexp) *
-primaryexp ::= IDENT | INT_LITERAL | CHAR_LITERAL | STRING_LITERAL
+mulexp ::= secondaryexp (( "*" | "/" | "%") secondaryexp)*
+secondaryexp ::= primaryexp (( sizeof(type) | * | (type) | - ) primaryexp)*
+primaryexp ::= primary (( . | [] | () ) primary) *
+primary ::= IDENT | INT_LITERAL | CHAR_LITERAL | STRING_LITERAL
 
 */
 

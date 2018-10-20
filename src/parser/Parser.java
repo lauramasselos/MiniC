@@ -352,7 +352,7 @@ public class Parser {
     		else error(TokenClass.SC, TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF);
     	} 
     	else if (accept(TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF)) {
-    		Expr rhs = null;
+    		Expr rhs;
     		Expr lhs = parseExp();
     		if (accept(TokenClass.SC)) {
     			nextToken();
@@ -396,100 +396,177 @@ public class Parser {
     	return new Block(vds, stmts);
     }
     // first = {“(“, IDENT, INT_LITERAL, “-“, CHAR_LITERAL, STRING_LITERAL, “*”, “sizeof”}
-    private Expr parseExp() {
-    	Expr e;
-    	if (accept(TokenClass.LPAR) && lookAhead(1).tokenClass != TokenClass.INT  && lookAhead(1).tokenClass != TokenClass.CHAR && lookAhead(1).tokenClass != TokenClass.VOID && lookAhead(1).tokenClass != TokenClass.STRUCT) {
-    		nextToken(); 	
-    		e = parseExp();
-    		expect(TokenClass.RPAR);
-    		return parseOtherExp(e);
+   private Expr parseExp() {
+    	return parseOrExp();
+    }
+    
+    private Expr parseOrExp() {
+    	Expr lhs = parseAndExp();
+    	if (accept(TokenClass.OR)) {
+    		expect(TokenClass.OR);
+    		Expr rhs = parseExp();
+    		return new BinOp(lhs, Op.OR, rhs);
     	}
-    	else if (accept(TokenClass.IDENTIFIER)) {
-    		if (lookAhead(1).tokenClass == TokenClass.LPAR) {
-    			e = parseFunCall();
-    			return parseOtherExp(e);
-    		}
-    		else {
-    			String id = expect(TokenClass.IDENTIFIER).data;
-    			e = new VarExpr(id);
-    			return parseOtherExp(e);
-    		}
+    	return lhs;
+    }
+    
+    
+    private Expr parseAndExp() {
+    	Expr lhs = parseEqExp();
+    	if (accept(TokenClass.OR)) {
+    		expect(TokenClass.OR);
+    		Expr rhs = parseExp();
+    		return new BinOp(lhs, Op.AND, rhs);
+    	}
+    	return lhs;
+    }
+    
+    private Expr parseEqExp() {
+    	Expr lhs = parseRelExp();
+    	if (accept(TokenClass.NE)) {
+    		expect(TokenClass.NE);
+    		Expr rhs = parseExp();
+    		return new BinOp(lhs, Op.NE, rhs);
+    	}
+    	else if (accept(TokenClass.EQ)) {
+    		expect(TokenClass.EQ);
+    		Expr rhs = parseExp();
+    		return new BinOp(lhs, Op.EQ, rhs);
+    	}
+    	return lhs;
+    }
+    
+    private Expr parseRelExp() {
+    	Expr lhs = parseAddExp();
+    		if (accept(TokenClass.LE)) {
+        		expect(TokenClass.LE);
+        		Expr rhs = parseExp();
+        		return new BinOp(lhs, Op.LE, rhs);
+        	}
+        	else if (accept(TokenClass.GE)) {
+        		expect(TokenClass.GE);
+        		Expr rhs = parseExp();
+        		return new BinOp(lhs, Op.GE, rhs);
+        	}
+        	else if (accept(TokenClass.LT)) {
+        		expect(TokenClass.LT);
+        		Expr rhs = parseExp();
+        		return new BinOp(lhs, Op.LT, rhs);
+        	}
+        	else if (accept(TokenClass.GT)) {
+        		expect(TokenClass.GT);
+        		Expr rhs = parseExp();
+        		return new BinOp(lhs, Op.GT, rhs);
+        	}
+        	return lhs;
+    }
+    
+    private Expr parseAddExp() {
+    	Expr lhs = parseMulExp();
+    	if (accept(TokenClass.PLUS)) {
+    		expect(TokenClass.PLUS);
+    		Expr rhs = parseExp();
+    		return new BinOp(lhs, Op.ADD, rhs);
+    	}
+    	else if (accept(TokenClass.MINUS)) {
+    		expect(TokenClass.MINUS);
+    		Expr rhs = parseExp();
+    		return new BinOp(lhs, Op.SUB, rhs);
+    	}
+    	return lhs;
+    }
+    
+    
+    private Expr parseMulExp() {
+    	Expr lhs = parseSecondaryExp();
+    	if (accept(TokenClass.ASTERIX)) {
+    		expect(TokenClass.ASTERIX);
+    		Expr rhs = parseExp();
+    		return new BinOp(lhs, Op.MUL, rhs);
+    	}
+    	else if (accept(TokenClass.DIV)) {
+    		expect(TokenClass.DIV);
+    		Expr rhs = parseExp();
+    		return new BinOp(lhs, Op.DIV, rhs);
+    	}
+    	else if (accept(TokenClass.REM)) {
+    		expect(TokenClass.REM);
+    		Expr rhs = parseExp();
+    		return new BinOp(lhs, Op.MOD, rhs);
+    	}
+    	return lhs;
+    }
+    
+    private Expr parseSecondaryExp() {
+    	Expr lhs = parsePrimaryExp();
+    	if (accept(TokenClass.MINUS)) {
+    		nextToken();
+    		return new BinOp(new IntLiteral(0), Op.SUB, lhs);
+    	}
+    	else if (accept(TokenClass.SIZEOF)) {
+    		return parseSizeOf();
+    	}
+    	else if (accept(TokenClass.ASTERIX)) {
+    		return parseValueAt();
+    	}
+    	else if (accept(TokenClass.LPAR) && (lookAhead(1).tokenClass == TokenClass.INT || lookAhead(1).tokenClass == TokenClass.CHAR || lookAhead(1).tokenClass == TokenClass.VOID || lookAhead(1).tokenClass == TokenClass.STRUCT)) {
+    		return parseTypeCast();
+    	}
+    	return lhs;
+    }
+    
+    private Expr parsePrimaryExp() {
+    	Expr lhs = parsePrimary();
+    	if (accept(TokenClass.LSBR)) {
+    		return parseArrayAccess(lhs);
+    	}
+    	else if (accept(TokenClass.DOT)) {
+    		return parseFieldAccess(lhs);
+    	}
+    	else if (accept(TokenClass.LPAR) && lookAhead(1).tokenClass != TokenClass.INT  && lookAhead(1).tokenClass != TokenClass.CHAR && lookAhead(1).tokenClass != TokenClass.VOID && lookAhead(1).tokenClass != TokenClass.STRUCT) {
+        		nextToken(); 	
+        		Expr e = parseExp();
+        		expect(TokenClass.RPAR);
+        		return e;
+        	}
+    	
+		return lhs;
+    }
+    
+    private Expr parsePrimary() {
+    	if (accept(TokenClass.IDENTIFIER)) {
+    		return parseFunCall();
     	}
     	else if (accept(TokenClass.INT_LITERAL)) {
     		int n = Integer.parseInt(expect(TokenClass.INT_LITERAL).data);
-    		IntLiteral int_lit = new IntLiteral(n);
-    		e = int_lit;
-    		return parseOtherExp(e);
-    	}
-    	else if (accept(TokenClass.MINUS)) {
-    		nextToken();
-    		e = parseExp();
-    		BinOp binOp = new BinOp(new IntLiteral(0), Op.SUB, e);
-    		return parseOtherExp(binOp);
+    		return new IntLiteral(n);
     	}
     	else if (accept(TokenClass.CHAR_LITERAL)) {
     		String str = expect(TokenClass.CHAR_LITERAL).data;
-    		ChrLiteral chr_lit = new ChrLiteral(str.charAt(0));
-    		e = chr_lit;
-    		return parseOtherExp(e);
+    		char c = str.charAt(0);
+    		return new ChrLiteral(c);
     	}
     	else if (accept(TokenClass.STRING_LITERAL)) {
     		String str = expect(TokenClass.STRING_LITERAL).data;
-    		StrLiteral str_lit = new StrLiteral(str);
-    		e = str_lit;
-    		return parseOtherExp(e);
+    		return new StrLiteral(str);
     	}
-    	else if (accept(TokenClass.ASTERIX)) {
-    		e = parseValueAt();
-    		return parseOtherExp(e);
-    	}
-    	else if (accept(TokenClass.SIZEOF)) {
-    		e = parseSizeOf();
-    		return parseOtherExp(e);
-    	}
-    	else if (accept(TokenClass.LPAR) && (lookAhead(1).tokenClass == TokenClass.INT || lookAhead(1).tokenClass == TokenClass.CHAR || lookAhead(1).tokenClass == TokenClass.VOID || lookAhead(1).tokenClass == TokenClass.STRUCT)) {
-    		e = parseTypeCast();
-    		return parseOtherExp(e);
-    	}
-    	else {
-    		error(TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF);
-    		return new StrLiteral("Something's gone horribly wrong!");
-    	}
+		return new StrLiteral("PARSE PRIMARY ERROR");   
     }
     
-    private Expr parseOtherExp(Expr lhs) {
-    	if (accept(TokenClass.GT, TokenClass.LT, TokenClass.GE, TokenClass.LE, TokenClass.NE, TokenClass.EQ, TokenClass.PLUS, TokenClass.MINUS, TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM, TokenClass.OR, TokenClass.AND)) {
-    		Op op;
-    		Expr rhs, e;
-    		switch(expect(TokenClass.GT, TokenClass.LT, TokenClass.GE, TokenClass.LE, TokenClass.NE, TokenClass.EQ, TokenClass.PLUS, TokenClass.MINUS, TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM, TokenClass.OR, TokenClass.AND).tokenClass) {
-				case ASTERIX: op = Op.MUL; break;
-				case DIV: op = Op.DIV; break;
-				case REM: op = Op.MOD; break;
-				case PLUS: op = Op.ADD; break;
-				case MINUS: op = Op.SUB; break;
-				case GE: op = Op.GE; break;
-				case LE: op = Op.LE; break;
-				case GT: op = Op.GT; break;
-				case LT: op = Op.LT; break;
-				case EQ: op = Op.EQ; break;
-				case NE: op = Op.NE; break;
-				case AND: op = Op.AND; break;
-				default: op = Op.OR;
-		}
-    		rhs = parseExp();
-    		e = new BinOp(lhs, op, rhs);
-    		return parseOtherExp(e);
-    	}
-    	else if (accept(TokenClass.LSBR)) {
-    		Expr e = parseArrayAccess(lhs);
-    		return parseOtherExp(e);
-    	}
-    	else if (accept(TokenClass.DOT)) {
-    		Expr e = parseFieldAccess(lhs);
-    		return parseOtherExp(e);
-    	} // no error here, since parseOtherExp() can be empty!
-    	else return lhs;
-    }
+    /*
+     * exp ::= orexp
+
+orexp ::= andexp ("||" andexp)*
+andexp ::= eqexp ("&&" eqexp)*
+eqexp ::= relexp (( "==" | "!=" ) relexp)*
+relexp ::= addexp (( "<"| ">" | "<=" | ">=" ) addexp)*
+addexp ::= mulexp (( "+" | "-" ) mulexp)*
+mulexp ::= secondaryexp (( "*" | "/" | "%") secondaryexp)*
+secondaryexp ::= primaryexp  (( sizeof(type) | * | (type) | - ) primaryexp )*
+primaryexp  ::= primary (( . | [] | () ) primary) *
+primary ::= IDENT | INT_LITERAL | CHAR_LITERAL | STRING_LITERAL
+     */
+    
     
     private ArrayAccessExpr parseArrayAccess(Expr arr) {
     	if (accept(TokenClass.LSBR)) {
@@ -542,18 +619,15 @@ public class Parser {
     	return null;
     }
   // FunCallExpr ::= Strint Expr*  
-    private FunCallExpr parseFunCall() {
+    private Expr parseFunCall() {
     	if (accept(TokenClass.IDENTIFIER)) {
     		String name = expect(TokenClass.IDENTIFIER).data;
+    		if (accept(TokenClass.LPAR)) {
     		List<Expr> exps = new LinkedList<>();
-    		expect(TokenClass.LPAR);
-    		
-    		
+       		expect(TokenClass.LPAR); 		
     		if (accept(TokenClass.RPAR)) {
     			nextToken();
     		}
-    		
-    		
     		else {
     			Expr e = parseExp();
     			exps.add(e);
@@ -565,8 +639,9 @@ public class Parser {
     			expect(TokenClass.RPAR);
     		}
     		return new FunCallExpr(name, exps);
-    	}
-    	return null;
+    	}		
+    	else return new VarExpr(name);
     }
-
+    	else return new StrLiteral("PARSEFUNCALL ERROR");
+    }
 }
