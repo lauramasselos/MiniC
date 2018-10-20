@@ -152,7 +152,7 @@ public class Parser {
         	nextToken();
         	String name = expect(TokenClass.IDENTIFIER).data;
         	expect(TokenClass.LBRA);
-        	List<VarDecl>vds =  parseVarDecls();
+        	List<VarDecl> vds =  parseVarDecls();
         	expect(TokenClass.RBRA);
         	expect(TokenClass.SC);
         	StructTypeDecl std = new StructTypeDecl(new StructType(name),vds); 
@@ -352,8 +352,7 @@ public class Parser {
     		else error(TokenClass.SC, TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF);
     	} 
     	else if (accept(TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF)) {
-    		Expr lhs = null;
-    		Expr rhs = null;
+    		Expr lhs, rhs;
     		lhs = parseExp();
     		if (accept(TokenClass.SC)) {
     			nextToken();
@@ -425,12 +424,12 @@ public class Parser {
     	else if (accept(TokenClass.MINUS)) {
     		nextToken();
     		e = parseExp();
-    		return parseOtherExp(e);
+    		BinOp binOp = new BinOp(new IntLiteral(0), Op.SUB, e);
+    		return parseOtherExp(binOp);
     	}
     	else if (accept(TokenClass.CHAR_LITERAL)) {
     		String str = expect(TokenClass.CHAR_LITERAL).data;
-    		char c = str.charAt(0);
-    		ChrLiteral chr_lit = new ChrLiteral(c);
+    		ChrLiteral chr_lit = new ChrLiteral(str.charAt(0));
     		e = chr_lit;
     		return parseOtherExp(e);
     	}
@@ -454,7 +453,7 @@ public class Parser {
     	}
     	else {
     		error(TokenClass.LPAR, TokenClass.IDENTIFIER, TokenClass.INT_LITERAL, TokenClass.MINUS, TokenClass.CHAR_LITERAL, TokenClass.STRING_LITERAL, TokenClass.ASTERIX, TokenClass.SIZEOF);
-    		return new StrLiteral("no u");
+    		return new StrLiteral("Something's gone horribly wrong!");
     	}
     }
     
@@ -489,7 +488,7 @@ public class Parser {
     		Expr e = parseFieldAccess(lhs);
     		return parseOtherExp(e);
     	} // no error here, since parseOtherExp() can be empty!
-    	return lhs;
+    	else return lhs;
     }
     
     private ArrayAccessExpr parseArrayAccess(Expr arr) {
@@ -548,14 +547,20 @@ public class Parser {
     		String name = expect(TokenClass.IDENTIFIER).data;
     		List<Expr> exps = new LinkedList<>();
     		expect(TokenClass.LPAR);
+    		
+    		
     		if (accept(TokenClass.RPAR)) {
     			nextToken();
     		}
+    		
+    		
     		else {
     			Expr e = parseExp();
     			exps.add(e);
     			while (accept(TokenClass.COMMA)) {
-    				exps.add(parseExp());
+    				nextToken();
+    				e = parseExp();
+    				exps.add(e);
     			}
     			expect(TokenClass.RPAR);
     		}
