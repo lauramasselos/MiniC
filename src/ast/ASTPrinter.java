@@ -63,7 +63,7 @@ public class ASTPrinter implements ASTVisitor<Void> {
             delimiter = ",";
             fd.accept(this);
         }
-        writer.print(")");
+        writer.print(")\n");
 	    writer.flush();
         return null;
     }
