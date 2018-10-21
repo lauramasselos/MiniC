@@ -456,7 +456,7 @@ public class Parser {
     		return new StrLiteral("Something's gone horribly wrong!");
     	}
     }
-    
+    // add precedence rules here
     private Expr parseOtherExp(Expr lhs) {
     	if (accept(TokenClass.GT, TokenClass.LT, TokenClass.GE, TokenClass.LE, TokenClass.NE, TokenClass.EQ, TokenClass.PLUS, TokenClass.MINUS, TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM, TokenClass.OR, TokenClass.AND)) {
     		Op op;
