@@ -17,6 +17,8 @@ import java.util.Queue;
 public class Parser {
 
     private Token token;
+    
+    private int par_count = 0;
 
     // use for backtracking (useful for distinguishing decls from procs when parsing a program for instance)
     private Queue<Token> buffer = new LinkedList<>();
@@ -147,18 +149,20 @@ public class Parser {
     }
 
 // structdecl ::= "struct" IDENT "{" (vardecl)+ "}" ";"
+    // StructTypeDecl ::= StructType VarDecl*
     private List<StructTypeDecl> parseStructDecls() {
         if (accept(TokenClass.STRUCT) && lookAhead(2).tokenClass == TokenClass.LBRA) {
         	nextToken();
-        	String name = expect(TokenClass.IDENTIFIER).data;
+        	String name = expect(TokenClass.IDENTIFIER).data; 	// structtype name
+        	StructType st = new StructType(name);
         	expect(TokenClass.LBRA);
-        	List<VarDecl> vds =  parseVarDecls();
+        	List<VarDecl> vds =  parseVarDecls(); 				// vardecls for particular structtype
         	expect(TokenClass.RBRA);
         	expect(TokenClass.SC);
-        	StructTypeDecl std = new StructTypeDecl(new StructType(name), vds); 
-        	List<StructTypeDecl> stds = parseStructDecls(); 
-        	stds.add(0, std);
-        	return stds;
+        	StructTypeDecl std = new StructTypeDecl(st, vds);  	// store vardecls in structtype
+        	List<StructTypeDecl> stds = parseStructDecls();  	// parse all other structdecls
+        	stds.add(0, std); 									// add current structdecl to head of list
+        	return stds;										// return structdecls
         } 
         else {
         	return new LinkedList<StructTypeDecl>();
@@ -399,9 +403,11 @@ public class Parser {
     private Expr parseExp() {
     	Expr e;
     	if (accept(TokenClass.LPAR) && lookAhead(1).tokenClass != TokenClass.INT  && lookAhead(1).tokenClass != TokenClass.CHAR && lookAhead(1).tokenClass != TokenClass.VOID && lookAhead(1).tokenClass != TokenClass.STRUCT) {
-    		nextToken(); 	
+    		nextToken();
+    		par_count++;
     		e = parseExp();
     		expect(TokenClass.RPAR);
+    		par_count--;
     		return parseOtherExp(e);
     	}
     	else if (accept(TokenClass.IDENTIFIER)) {
@@ -424,7 +430,7 @@ public class Parser {
     	else if (accept(TokenClass.MINUS)) {
     		nextToken();
     		e = parseExp();
-    		BinOp binOp = new BinOp(new IntLiteral(0), Op.SUB, e);
+    		BinOp binOp = new BinOp(new IntLiteral(0), Op.SUB, e, -1);
     		return parseOtherExp(binOp);
     	}
     	else if (accept(TokenClass.CHAR_LITERAL)) {
@@ -460,8 +466,10 @@ public class Parser {
     private Expr parseOtherExp(Expr lhs) {
     	if (accept(TokenClass.GT, TokenClass.LT, TokenClass.GE, TokenClass.LE, TokenClass.NE, TokenClass.EQ, TokenClass.PLUS, TokenClass.MINUS, TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM, TokenClass.OR, TokenClass.AND)) {
     		Op op;
-    		Expr rhs, e;
-    		switch(expect(TokenClass.GT, TokenClass.LT, TokenClass.GE, TokenClass.LE, TokenClass.NE, TokenClass.EQ, TokenClass.PLUS, TokenClass.MINUS, TokenClass.ASTERIX, TokenClass.DIV, TokenClass.REM, TokenClass.OR, TokenClass.AND).tokenClass) {
+    		TokenClass operation = token.tokenClass;
+    		nextToken();
+    		Expr rhs = parseExp();
+    		switch(operation) {
 				case ASTERIX: op = Op.MUL; break;
 				case DIV: op = Op.DIV; break;
 				case REM: op = Op.MOD; break;
@@ -475,10 +483,10 @@ public class Parser {
 				case NE: op = Op.NE; break;
 				case AND: op = Op.AND; break;
 				default: op = Op.OR;
+				
 		}
-    		rhs = parseExp();
-    		e = new BinOp(lhs, op, rhs);
-    		return parseOtherExp(e);
+    		BinOp e = new BinOp(lhs, op, rhs, par_count);
+    		return parseOtherExp(fixPrecedence(e));
     	}
     	else if (accept(TokenClass.LSBR)) {
     		Expr e = parseArrayAccess(lhs);
@@ -490,6 +498,48 @@ public class Parser {
     	} // no error here, since parseOtherExp() can be empty!
     	else return lhs;
     }
+    
+    
+    private Expr fixPrecedence(BinOp b) {
+    	if (b.lhs instanceof BinOp) { 													// lhs is a BinOp, so it has its own lhs and rhs
+    		BinOp lhs = (BinOp) b.lhs;
+    		if (precedence(lhs.op) > precedence(b.op) && (lhs.n == b.n)) { 								// if op in lhs is less binding than op in BinOp b
+    			return fixPrecedence(new BinOp(lhs.lhs, lhs.op, new BinOp(lhs.rhs, b.op, b.rhs, lhs.n), lhs.n));
+    		}
+    	}
+    	if (b.rhs instanceof BinOp) { 													// rhs is a BinOp, so it has its own lhs and rhs
+    		BinOp rhs = (BinOp) b.rhs;
+    		if (precedence(rhs.op) > precedence(b.op) && (rhs.n == b.n)) { 								// if op in rhs is less binding than op in BinOp b
+    			return fixPrecedence(new BinOp(new BinOp(b.lhs, b.op, rhs.lhs, rhs.n), rhs.op, rhs.rhs, rhs.n));
+    		}
+    	}
+    	
+    	return b;
+    }
+    
+    private int precedence(Op op) {
+    	int n = 0;
+    	switch(op) {
+    	case MUL: n = 3; break;
+		case DIV: n = 3; break;
+		case MOD: n = 3; break;
+		case ADD: n = 4; break;
+		case SUB: n = 4; break;
+		case GE: n = 5; break;
+		case LE: n = 5; break;
+		case GT: n = 5; break;
+		case LT: n = 5; break;
+		case EQ: n = 6; break;
+		case NE: n = 6; break;
+		case AND: n = 7; break;
+		case OR: n = 8; break;
+    	}
+    	return n;
+    }
+    
+    
+    
+    
     
     private ArrayAccessExpr parseArrayAccess(Expr arr) {
     	if (accept(TokenClass.LSBR)) {

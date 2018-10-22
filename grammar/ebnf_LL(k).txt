@@ -51,25 +51,11 @@ exp        ::= "(" exp ")" otherExp
              | STRING_LITERAL otherExp
              | valueat otherExp | funcall otherExp | sizeof otherExp | typecast otherExp
 
-otherExp ::= arrayaccess otherExp 
+otherExp ::= arrayaccess exp otherExp 
 			| fieldaccess otherExp
-			| (">" | "<" | ">=" | "<=" | "!=" | "==" | "+" | "-" | "/" | "*" | "%" | "||" | "&&") otherExp
+			| (">" | "<" | ">=" | "<=" | "!=" | "==" | "+" | "-" | "/" | "*" | "%" | "||" | "&&") exp otherExp
 			| <e>
-	/*		
 
-exp ::= orexp
-
-orexp ::= andexp ("||" andexp)*
-andexp ::= eqexp ("&&" eqexp)*
-eqexp ::= relexp (( "==" | "!=" ) relexp)*
-relexp ::= addexp (( "<"| ">" | "<=" | ">=" ) addexp)*
-addexp ::= mulexp (( "+" | "-" ) mulexp)*
-mulexp ::= secondaryexp (( "*" | "/" | "%") secondaryexp)*
-secondaryexp ::= primaryexp (( sizeof(type) | * | (type) | - ) primaryexp)*
-primaryexp ::= primary (( . | [] | () ) primary) *
-primary ::= IDENT | INT_LITERAL | CHAR_LITERAL | STRING_LITERAL
-
-*/
 
 
 funcall      ::= IDENT "(" [ exp ("," exp)* ] ")"
