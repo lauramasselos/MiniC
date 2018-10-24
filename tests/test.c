@@ -2,8 +2,13 @@ struct s1 {
   int n;
 };
 
+int b;
+
 int main() {
-  a + b * c;
-  (a + b) * c;
-  (a + (b-c) *d);
+  int m;
+  char c;
+  m = 1;
+  c = 'c';
+  return m;
+
 }

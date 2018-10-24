@@ -1,10 +1,10 @@
 package ast;
 
 public class PointerType implements Type {
-    public final Type type;
+    public final Type typeP;
 
-    public PointerType(Type type) {
-	    this.type = type;
+    public PointerType(Type typeP) {
+	    this.typeP = typeP;
     }
 
     public <T> T accept(ASTVisitor<T> v) {

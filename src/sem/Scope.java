@@ -16,6 +16,9 @@ public class Scope {
 		// To be completed...
 		Symbol curSymbol = lookupCurrent(name);
 		if (curSymbol != null) return curSymbol;
+		//if (outer == null) {
+			//return new NullSymbol();
+		//}
 		return outer.lookup(name);
 	}
 	
@@ -27,4 +30,5 @@ public class Scope {
 	public void put(Symbol sym) {
 		symbolTable.put(sym.name, sym);
 	}
+	
 }

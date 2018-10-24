@@ -505,16 +505,17 @@ public class Parser {
     
     private Expr fixPrecedence(BinOp b) {
     	if (b.lhs instanceof BinOp) { 													// lhs is a BinOp, so it has its own lhs and rhs
-    		BinOp lhs = (BinOp) b.lhs;
-    		if (precedence(lhs.op) >= precedence(b.op) && (lhs.n == b.n)) { 								// if op in lhs is less binding than op in BinOp b
-    			return fixPrecedence(new BinOp(lhs.lhs, lhs.op, new BinOp(lhs.rhs, b.op, b.rhs, lhs.n), lhs.n));
+    		BinOp e1 = (BinOp) b.lhs;
+    		if (precedence(e1.op) >= precedence(b.op) && (e1.n == b.n)) { 								// if op in lhs is less binding than op in BinOp b
+    			return (new BinOp(e1.lhs, e1.op, fixPrecedence(new BinOp(e1.rhs, b.op, b.rhs, e1.n)), e1.n));
     		}
     	}
     	if (b.rhs instanceof BinOp) { 													// rhs is a BinOp, so it has its own lhs and rhs
-    		BinOp rhs = (BinOp) b.rhs;
-    		if (precedence(rhs.op) >= precedence(b.op) && (rhs.n == b.n)) { 								// if op in rhs is less binding than op in BinOp b
-    			return fixPrecedence(new BinOp(new BinOp(b.lhs, b.op, rhs.lhs, rhs.n), rhs.op, rhs.rhs, rhs.n));
-    		}
+    		BinOp e2 = (BinOp) b.rhs;
+    		if (precedence(e2.op) >= precedence(b.op) && (e2.n == b.n)) { 								// if op in rhs is less binding than op in BinOp b
+    			
+    			return (new BinOp(fixPrecedence(new BinOp(b.lhs, b.op, e2.lhs, e2.n)), e2.op, e2.rhs, e2.n));
+    		} // change lhs of rhs (e2.lhs); leave e2.rhs
     	}
     	
     	return b;

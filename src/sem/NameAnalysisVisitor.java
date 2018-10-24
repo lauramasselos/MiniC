@@ -11,29 +11,26 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	@Override
 	public Void visitProgram(Program p) {
 		// To be completed...
-		List<VarDecl> vds = new LinkedList<>();
-		Type type = BaseType.CHAR; String varName = "s";
-		PointerType ptype = new PointerType(type);
-		VarDecl vd1 = new VarDecl(ptype, varName); vds.add(vd1);
+		List<VarDecl> vds1 = new LinkedList<>();
+		List<VarDecl> vds2 = new LinkedList<>();
+		List<VarDecl> vds3 = new LinkedList<>();
+		List<VarDecl> vds4 = new LinkedList<>();
+		List<VarDecl> vdsEMPTY = new LinkedList<>();
 		
-		scope.put(new FunSymbol(new FunDecl(BaseType.VOID, "print_s", vds, new Block(null, null))));
+		Type type = BaseType.CHAR; PointerType ptype = new PointerType(type);
 		
-		vds.remove(0); varName = "i";
-		VarDecl vd2 = new VarDecl(BaseType.INT, varName); vds.add(vd2);
+		String varName = "s"; VarDecl vd1 = new VarDecl(ptype, varName); vds1.add(vd1); // print_s
+		varName = "i"; VarDecl vd2 = new VarDecl(BaseType.INT, varName); vds2.add(vd2);// print_i
+		varName = "c"; VarDecl vd3 = new VarDecl(BaseType.CHAR, varName); vds3.add(vd3);// print_c 
+		varName = "size"; VarDecl vd4 = new VarDecl(BaseType.INT, varName);vds4.add(vd4); // mcalloc
 		
-		scope.put(new FunSymbol(new FunDecl(BaseType.VOID, "print_i", vds, new Block(null, null))));
 		
-		vds.remove(0); varName = "c";
-		VarDecl vd3 = new VarDecl(BaseType.CHAR, varName); vds.add(vd3);
-		
-		scope.put(new FunSymbol(new FunDecl(BaseType.VOID, "print_c", vds, new Block(null, null))));
-		scope.put(new FunSymbol(new FunDecl(BaseType.CHAR, "read_c", null, new Block(null, null))));
-		scope.put(new FunSymbol(new FunDecl(BaseType.INT, "read_i", null, new Block(null, null))));
-		
-		vds.remove(0); varName = "size";
-		VarDecl vd4 = new VarDecl(BaseType.INT, varName); vds.add(vd4);
-		
-		scope.put(new FunSymbol(new FunDecl(new PointerType(BaseType.VOID), "mcalloc", vds, new Block(null, null))));
+		scope.put(new FunSymbol(new FunDecl(BaseType.VOID, "print_s", vds1, new Block(null, null))));
+		scope.put(new FunSymbol(new FunDecl(BaseType.VOID, "print_i", vds2, new Block(null, null))));
+		scope.put(new FunSymbol(new FunDecl(BaseType.VOID, "print_c", vds3, new Block(null, null))));
+		scope.put(new FunSymbol(new FunDecl(BaseType.CHAR, "read_c", vdsEMPTY, new Block(null, null))));
+		scope.put(new FunSymbol(new FunDecl(BaseType.INT, "read_i", vdsEMPTY, new Block(null, null))));
+		scope.put(new FunSymbol(new FunDecl(new PointerType(BaseType.VOID), "mcalloc", vds4, new Block(null, null))));
 
 		for (StructTypeDecl s : p.structTypeDecls) {
 			s.accept(this);
@@ -50,7 +47,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	@Override
 	public Void visitStructTypeDecl(StructTypeDecl sts) {
 		Symbol s = scope.lookupCurrent(sts.structType.name);
-		if (s != null) error("error");
+		if (s != null) error("STRUCTURE ALREADY DECLARED");
 		else scope.put(new StructSymbol(sts));
 		Scope oldScope = scope;
 		scope = new Scope(oldScope);
@@ -87,7 +84,6 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 
 	@Override
 	public Void visitVarExpr(VarExpr v) {
-		// To be completed...
 		Symbol vs = scope.lookup(v.name);
 		if (vs == null) error("VARIABLE NOT DECLARED");
 		else if (!vs.isVar()) error("NOT A VARIABLE");
@@ -97,15 +93,12 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 
 	@Override
 	public Void visitBlock(Block b) {
-		Scope oldScope = scope;
-		scope = new Scope(oldScope);
 		for (VarDecl vd : b.vds) {
 			vd.accept(this);
 		}
 		for (Stmt s : b.stmts) {
 			s.accept(this);
 		}
-		scope = oldScope;
 		return null;
 	}
 	
@@ -114,7 +107,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 		Symbol sts = scope.lookup(st.name);
 		if (sts == null) error("STRUCTTYPE NOT DECLARED");
 		else if (!sts.isStruct()) error("NOT A STRUCTTYPE");
-		else st.name = ((StructSymbol) sts).name;
+		else st.stdec = ((StructSymbol) sts).stdec;
 		return null;
 	}
 
@@ -149,13 +142,13 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 		Symbol fs = scope.lookup(fce.name);
 		if (fs==null) error("FUNCTION NOT DECLARED");
 		else if (!fs.isFun()) error("NOT A FUNCTION");
-		else fs.name = ((FunSymbol) fs).fd.name;
-		Scope oldScope = scope;
-		scope = new Scope(oldScope);
+		else {
+			fce.fd = ((FunSymbol) fs).fd;
+			fs.name = ((FunSymbol) fs).fd.name;
+		}
 		for (Expr e : fce.args) {
 			e.accept(this);
 		}
-		scope = oldScope;
 		return null;
 	}
 
