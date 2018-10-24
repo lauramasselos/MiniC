@@ -48,7 +48,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
 	@Override
 	public Type visitProgram(Program p) {
-		for (StructTypeDecl s : p.structTypeDecls) {
+		/*for (StructTypeDecl s : p.structTypeDecls) {
 			s.accept(this);
 		}
 		for (VarDecl v : p.varDecls) {
@@ -56,7 +56,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 		}
 		for (FunDecl f : p.funDecls) {
 			f.accept(this);
-		}
+		}*/
 		return null;
 	}
 
