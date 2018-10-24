@@ -125,11 +125,14 @@ public class Parser {
     }
 
 
-/*	LAST COMMIT ERRORS:			(October 10)
+/*	LAST COMMIT ERRORS:			(October 22)
  * 
- * struct_declaration (expected 0, returned 245)
- * variable_initialization (expected 245, returned 124)
+ *AST ERRORS (all expected 0, returned 224)
+ * unary_operator_2
+ * return_1
  */
+ 
+
     private Program parseProgram() {
         parseIncludes();
         List<StructTypeDecl> stds = parseStructDecls();
@@ -503,13 +506,13 @@ public class Parser {
     private Expr fixPrecedence(BinOp b) {
     	if (b.lhs instanceof BinOp) { 													// lhs is a BinOp, so it has its own lhs and rhs
     		BinOp lhs = (BinOp) b.lhs;
-    		if (precedence(lhs.op) > precedence(b.op) && (lhs.n == b.n)) { 								// if op in lhs is less binding than op in BinOp b
+    		if (precedence(lhs.op) >= precedence(b.op) && (lhs.n == b.n)) { 								// if op in lhs is less binding than op in BinOp b
     			return fixPrecedence(new BinOp(lhs.lhs, lhs.op, new BinOp(lhs.rhs, b.op, b.rhs, lhs.n), lhs.n));
     		}
     	}
     	if (b.rhs instanceof BinOp) { 													// rhs is a BinOp, so it has its own lhs and rhs
     		BinOp rhs = (BinOp) b.rhs;
-    		if (precedence(rhs.op) > precedence(b.op) && (rhs.n == b.n)) { 								// if op in rhs is less binding than op in BinOp b
+    		if (precedence(rhs.op) >= precedence(b.op) && (rhs.n == b.n)) { 								// if op in rhs is less binding than op in BinOp b
     			return fixPrecedence(new BinOp(new BinOp(b.lhs, b.op, rhs.lhs, rhs.n), rhs.op, rhs.rhs, rhs.n));
     		}
     	}
