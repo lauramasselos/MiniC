@@ -1,10 +1,10 @@
 package ast;
 
 public class SizeOfExpr extends Expr {
-    public final Type type;
+    public final Type typeSOE;
 
-    public SizeOfExpr(Type type) {
-	    this.type = type;
+    public SizeOfExpr(Type typeSOE) {
+	    this.typeSOE = typeSOE;
     }
 
     public <T> T accept(ASTVisitor<T> v) {
