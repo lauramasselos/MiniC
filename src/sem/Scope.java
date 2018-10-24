@@ -1,10 +1,10 @@
 package sem;
 
-import java.util.Map;
+import java.util.*;
 
 public class Scope {
 	private Scope outer;
-	private Map<String, Symbol> symbolTable;
+	private Map<String, Symbol> symbolTable = new HashMap<String, Symbol>();
 	
 	public Scope(Scope outer) { 
 		this.outer = outer; 
@@ -14,12 +14,14 @@ public class Scope {
 	
 	public Symbol lookup(String name) {
 		// To be completed...
-		return null;
+		Symbol curSymbol = lookupCurrent(name);
+		if (curSymbol != null) return curSymbol;
+		return outer.lookup(name);
 	}
 	
 	public Symbol lookupCurrent(String name) {
 		// To be completed...
-		return null;
+		return symbolTable.get(name);
 	}
 	
 	public void put(Symbol sym) {
