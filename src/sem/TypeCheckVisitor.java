@@ -22,9 +22,10 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 	@Override
 	public Type visitBlock(Block b) {
 		Type blockT = null;
+		for (VarDecl v : b.vds) v.accept(this);
 		for (Stmt s : b.stmts) {
 			Type t = s.accept(this);
-			if (!(s instanceof Assign)){
+			if (!(s instanceof Assign)&& !(s instanceof ExprStmt)){
 			if (t != null) {
 				if (blockT == null){
 					blockT = t;
@@ -32,18 +33,18 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 			}
 			} // TODO doesn't detect mismatch
 		}
-		if (blockT == null) blockT = BaseType.VOID;
 		return blockT;
 	}
 
 	@Override
 	public Type visitFunDecl(FunDecl fd) {
 		Type blockT = fd.block.accept(this);
+		if (blockT == null) blockT = BaseType.VOID;
 		Type fdT = fd.type;
 		if (!equalTypes(blockT, fdT)) {
-			System.out.println("\n"+fdT);
-			System.out.println(blockT);
-			System.out.println(fd.name);
+//			System.out.println("\n" + fd.name);
+//			System.out.println(fdT);
+//			System.out.println(blockT);
 			error("FunDecl type does not match Return type");
 		}
 		return null;
@@ -97,8 +98,8 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 		    Type vdT = vd.type;
 
 		    if (!equalTypes(argT, vdT)) {
-		    	System.out.println("\n" + argT);
-		    	System.out.println(vdT);
+		    	//System.out.println("\n" + argT);
+		    	//System.out.println(vdT);
 		      error("Argument types and variable types don't match: FUNCALLEXPR");
 		    }
 		  }
@@ -180,17 +181,18 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 	@Override
 	public Type visitFieldAccessExpr(FieldAccessExpr fae) {
 		Type structT = fae.struct.accept(this);
+		Type t = null;
 		if (!(structT instanceof StructType)) error("Incorrect type expression: FIELDACCESSEXPR");
 		else {
 			StructTypeDecl s = ((StructType) structT).stdec;
 			for (VarDecl v : s.varDecls) {
 				if (v.varName.equals(fae.name)) {
-					structT = v.type; break;
+					t = v.type; break;
 				}
 			}
-			error("Field doesn't exist in StructTypeDecl");
+			if (t==null) error("Field doesn't exist in StructTypeDecl");
 		}
-		return structT;
+		return t;
 	}
 
 	@Override
@@ -254,7 +256,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 		if (i.s2 != null && equalTypes(s1T, s2T)) {
 			i.type = s1T;
 		}
-		System.out.println("IF type is:" + i.type);
+		//System.out.println("IF type is:" + i.type);
 		return i.type;
 	}
 
@@ -273,6 +275,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 	public Type visitReturn(Return r) {
 		if (r.e.accept(this) == null) r.type = BaseType.VOID;
 		else r.type = r.e.accept(this);
+		//System.out.println("RETURNS: " + r.type);
 		return r.type;
 	}
 

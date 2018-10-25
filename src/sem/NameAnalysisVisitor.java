@@ -48,6 +48,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	public Void visitStructTypeDecl(StructTypeDecl sts) {
 		Symbol s = scope.lookupCurrent(sts.structType.name);
 		if (s != null) error("STRUCTURE ALREADY DECLARED");
+		else if (sts.structType.name.equals("print_s")||sts.structType.name.equals("print_i")||sts.structType.name.equals("print_c")||sts.structType.name.equals("read_c")||sts.structType.name.equals("read_i")||sts.structType.name.equals("mcalloc")) error("Can't shadow built-in function");
 		else scope.put(new StructSymbol(sts));
 		Scope oldScope = scope;
 		scope = new Scope(oldScope);
@@ -58,16 +59,17 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 		return null;
 	}
 
-	private boolean inFunDecl = false;
+	private boolean topBlock = false;
 	// figure out when to change inFunDecl
 	@Override
 	public Void visitFunDecl(FunDecl fd) {
 		Symbol s = scope.lookupCurrent(fd.name);
 		if (s!= null) error("FUNCTION ALREADY DECLARED");
+		else if (fd.name.equals("print_s")||fd.name.equals("print_i")||fd.name.equals("print_c")||fd.name.equals("read_c")||fd.name.equals("read_i")||fd.name.equals("mcalloc")) error("Can't shadow built-in function");
 		else scope.put(new FunSymbol(fd));
 		Scope oldScope = scope;
 		scope = new Scope(oldScope);
-		inFunDecl = true;
+		topBlock = true;
 		for (VarDecl vd : fd.params) {
 			vd.accept(this);
 		}
@@ -79,10 +81,12 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	@Override
 	public Void visitVarDecl(VarDecl vd) {
 		Symbol s = scope.lookupCurrent(vd.varName);
+		vd.type.accept(this);
 		if (s != null) {
-			System.out.println(vd.varName);
+			//System.out.println(vd.varName);
 			error("VARIABLE ALREADY DECLARED");
 		}
+		else if (vd.varName.equals("print_s")||vd.varName.equals("print_i")||vd.varName.equals("print_c")||vd.varName.equals("read_c")||vd.varName.equals("read_i")||vd.varName.equals("mcalloc")) error("Can't shadow built-in function");
 		else scope.put(new VarSymbol(vd));
 		return null;
 	}
@@ -92,7 +96,10 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	public Void visitVarExpr(VarExpr v) {
 		Symbol vs = scope.lookup(v.name);
 		if (vs == null) error("VARIABLE NOT DECLARED");
-		else if (!vs.isVar()) error("NOT A VARIABLE");
+		else if (!vs.isVar()) {
+			error("NOT A VARIABLE");
+			v.vd = new VarDecl(BaseType.INT, vs.name);
+		}
 		else v.vd = ((VarSymbol) vs).vd;
 		return null;
 	}
@@ -101,8 +108,8 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	public Void visitBlock(Block b) {
 		Scope oldScope = scope;
 		
-		if (!inFunDecl) scope = new Scope(oldScope);
-		else inFunDecl = false;
+		if (!topBlock) scope = new Scope(oldScope);
+		else topBlock = false;
 		
 		for (VarDecl v : b.vds) v.accept(this);
 		for (Stmt s : b.stmts) s.accept(this);
@@ -151,7 +158,11 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 		// TODO Auto-generated method stub
 		Symbol fs = scope.lookup(fce.name);
 		if (fs==null) error("FUNCTION NOT DECLARED");
-		else if (!fs.isFun()) error("NOT A FUNCTION");
+		else if (!fs.isFun()) {
+			error("NOT A FUNCTION");
+			//fce.fd = new FunDecl(BaseType.INT, fce.name, new LinkedList<VarDecl>(), new Block(null, null));
+			//fce.fd.params = new LinkedList<VarDecl>();
+		}
 		else {
 			fce.fd = ((FunSymbol) fs).fd;
 			fs.name = ((FunSymbol) fs).fd.name;

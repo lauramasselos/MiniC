@@ -206,7 +206,7 @@ int won(char mark) {
 	  if (a13 == mark) {
 	     r = 1;
 	  }
-	} 
+	}
       }
     }
   }
@@ -229,7 +229,7 @@ int won(char mark) {
         if (a31 == mark) {
 	   r = 1;
 	}
-      } 
+      }
     }
   }
 
@@ -274,7 +274,7 @@ void main() {
     } else {
       player = switchPlayer(player); // give the turn to the opponent
     }
-    
+
     if (playing == 0) {
       print_s((char*)"Play again? (y/n)> ");
       yesno = read_c();

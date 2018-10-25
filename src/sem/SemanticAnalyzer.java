@@ -7,7 +7,7 @@ public class SemanticAnalyzer {
 	public int analyze(ast.Program prog) {
 		// List of visitors
 		int errors = 0;
-
+		try {
 		ArrayList<SemanticVisitor> visitors = new ArrayList<SemanticVisitor>() {{
 			add(new NameAnalysisVisitor());
 			add(new TypeCheckVisitor());
@@ -19,9 +19,11 @@ public class SemanticAnalyzer {
 			prog.accept(v);
 			errors += v.getErrorCount();
 		}
-		
+		}
 		// Return the number of errors.
-		
+		catch (Exception e) {
+			//errors++;
+		}
 		return errors;
 	}
 }

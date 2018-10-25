@@ -16,9 +16,9 @@ public class Scope {
 		// To be completed...
 		Symbol curSymbol = lookupCurrent(name);
 		if (curSymbol != null) return curSymbol;
-		//if (outer == null) {
-			//return new NullSymbol();
-		//}
+		if (outer == null) {
+			return new NullSymbol();
+		}
 		return outer.lookup(name);
 	}
 	
