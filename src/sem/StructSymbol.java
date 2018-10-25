@@ -9,4 +9,4 @@ public class StructSymbol extends Symbol {
 		this.stdec = stdec;
 	}
 
-}
+}//hello
