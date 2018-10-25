@@ -18,27 +18,21 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 		return null;
 	}
 
+
 	@Override
 	public Type visitBlock(Block b) {
 		Type blockT = null;
 		for (Stmt s : b.stmts) {
-			Type t = s.accept(this);		
-			if (s instanceof Return) {
-				blockT = t; break;
-				
+			Type t = s.accept(this);
+			if (!(s instanceof Assign)){
+			if (t != null) {
+				if (blockT == null){
+					blockT = t;
+				}
 			}
-			//else {
-				//if (t != null) {				
-					//if (blockT == null) blockT = t;
-					////////// keep looping! everythings fine!
-					//////////else if (!equalTypes(blockT, t)) {
-						////////error("Statement types do not match inside BLOCK");
-					////////} 
-				//}
-			//}
+			} // TODO doesn't detect mismatch
 		}
 		if (blockT == null) blockT = BaseType.VOID;
-		//System.out.println(blockT.toString());
 		return blockT;
 	}
 
@@ -47,8 +41,9 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 		Type blockT = fd.block.accept(this);
 		Type fdT = fd.type;
 		if (!equalTypes(blockT, fdT)) {
-			System.out.println("\n"+blockT);
-			System.out.println(fdT);
+			System.out.println("\n"+fdT);
+			System.out.println(blockT);
+			System.out.println(fd.name);
 			error("FunDecl type does not match Return type");
 		}
 		return null;
@@ -244,19 +239,22 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 		Type expT = w.e.accept(this);
 		Type stT = w.s.accept(this);
 		if (expT != BaseType.INT) error("Not an INT expression: WHILE");
-		return stT;
+		w.type = stT;
+		return w.type;
 	}
 
 	@Override
 	public Type visitIf(If i) {
 		Type expT = i.e.accept(this);
-		Type s1T = i.s1.accept(this);
+		Type s1T = i.s1.accept(this); //System.out.println(s1T);
 		Type s2T = null;
-		if (i.s2 != null) s2T = i.s2.accept(this);
+		if (i.s2 != null) s2T = i.s2.accept(this); // not picking up this statement
+		//System.out.println(s2T);
 		if (expT != BaseType.INT) error ("Not an INT expression: IF");
-		else if (i.s2 != null && equalTypes(s1T, s2T)) {
+		if (i.s2 != null && equalTypes(s1T, s2T)) {
 			i.type = s1T;
 		}
+		System.out.println("IF type is:" + i.type);
 		return i.type;
 	}
 
@@ -274,7 +272,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 	@Override
 	public Type visitReturn(Return r) {
 		if (r.e.accept(this) == null) r.type = BaseType.VOID;
-		else r.type = r.e.type;
+		else r.type = r.e.accept(this);
 		return r.type;
 	}
 

@@ -58,6 +58,8 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 		return null;
 	}
 
+	private boolean inFunDecl = false;
+	// figure out when to change inFunDecl
 	@Override
 	public Void visitFunDecl(FunDecl fd) {
 		Symbol s = scope.lookupCurrent(fd.name);
@@ -65,6 +67,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 		else scope.put(new FunSymbol(fd));
 		Scope oldScope = scope;
 		scope = new Scope(oldScope);
+		inFunDecl = true;
 		for (VarDecl vd : fd.params) {
 			vd.accept(this);
 		}
@@ -76,7 +79,10 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	@Override
 	public Void visitVarDecl(VarDecl vd) {
 		Symbol s = scope.lookupCurrent(vd.varName);
-		if (s != null) error("VARIABLE ALREADY DECLARED");
+		if (s != null) {
+			System.out.println(vd.varName);
+			error("VARIABLE ALREADY DECLARED");
+		}
 		else scope.put(new VarSymbol(vd));
 		return null;
 	}
@@ -93,12 +99,16 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 
 	@Override
 	public Void visitBlock(Block b) {
-		for (VarDecl vd : b.vds) {
-			vd.accept(this);
-		}
-		for (Stmt s : b.stmts) {
-			s.accept(this);
-		}
+		Scope oldScope = scope;
+		
+		if (!inFunDecl) scope = new Scope(oldScope);
+		else inFunDecl = false;
+		
+		for (VarDecl v : b.vds) v.accept(this);
+		for (Stmt s : b.stmts) s.accept(this);
+		
+		scope = oldScope;
+		
 		return null;
 	}
 	
@@ -205,15 +215,19 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	@Override
 	public Void visitWhile(While w) {
 		w.e.accept(this);
+
 		w.s.accept(this);
+		//scope = oldScope;
 		return null;
 	}
 
 	@Override
 	public Void visitIf(If i) {
 		i.e.accept(this);
+
 		i.s1.accept(this);
 		if (i.s2 != null) i.s2.accept(this);
+		//scope = oldScope;
 		return null;
 	}
 
