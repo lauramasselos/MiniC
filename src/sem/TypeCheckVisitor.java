@@ -4,7 +4,7 @@ import ast.*;
 import java.util.*;
 
 public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
-// create ErrorType implements Type class; return that instead of nulls
+
 	@Override
 	public Type visitBaseType(BaseType bt) {
 		return bt;
