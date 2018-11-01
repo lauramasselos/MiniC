@@ -88,4 +88,118 @@ public class CodeGenerator implements ASTVisitor<Register> {
         // TODO: to complete
         return null;
     }
+
+	@Override
+	public Register visitStructType(StructType st) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitPointerType(PointerType pt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitArrayType(ArrayType at) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitStrLiteral(StrLiteral sl) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitChrLiteral(ChrLiteral cl) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitIntLiteral(IntLiteral il) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitFunCallExpr(FunCallExpr fce) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitBinOp(BinOp bo) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitOp(Op o) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitArrayAccessExpr(ArrayAccessExpr aae) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitFieldAccessExpr(FieldAccessExpr fae) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitValueAtExpr(ValueAtExpr vae) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitSizeOfExpr(SizeOfExpr soe) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitTypecastExpr(TypecastExpr te) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitExprStmt(ExprStmt es) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitWhile(While w) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitIf(If i) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitAssign(Assign a) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Register visitReturn(Return r) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
