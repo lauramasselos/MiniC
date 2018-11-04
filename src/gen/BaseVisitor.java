@@ -7,6 +7,9 @@ import ast.*;
 
 public class BaseVisitor<T> implements GenVisitor<T> {
 	
+	public int slLabelTag;
+	public int vdLabelTag;
+	
 	PrintWriter writer;
 	public BaseVisitor(PrintWriter writer) {
 		this.writer = writer;
@@ -14,7 +17,6 @@ public class BaseVisitor<T> implements GenVisitor<T> {
 	public BaseVisitor() {
 		
 	}
-	public int slLabelTag;
 	
 	@Override
 	public T visitBaseType(BaseType bt) {

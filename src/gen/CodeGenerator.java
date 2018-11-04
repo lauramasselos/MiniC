@@ -54,10 +54,6 @@ public class CodeGenerator extends BaseVisitor<Register> {
     
     public boolean inGlobalScope;
     public LinkedList<VarDecl> globalVars = new LinkedList<>();
-
-    
-    
-    public int slLabelTag = 0;
     
     @Override
     public Register visitBaseType(BaseType bt) {
@@ -101,7 +97,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
     	inGlobalScope = true;
     	writer.println(".data");
     	for (VarDecl vd : p.varDecls) {
-    		vd.accept(this);
+    		vd.accept(new GlobalVarDeclVisitor(writer));
     	}
     	for (FunDecl fd : p.funDecls) {
     		fd.accept(new StrLiteralVisitor(writer));
@@ -121,17 +117,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
     @Override
     public Register visitVarDecl(VarDecl vd) {
         // TODO: to complete
-    	if (inGlobalScope) {
-    		globalVars.add(vd);
-    		if (!(vd.type instanceof StructType)) {
-    			writer.print(vd.varName + ": ");
-    			vd.type.accept(this);
-    		}
-    	}
-    	else {
-    		vd.type.accept(this);
-    		writer.println();
-    	}
+    	vd.accept(this);
         return null;
     }
 
