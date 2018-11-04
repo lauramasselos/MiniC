@@ -1,5 +1,7 @@
 package ast;
 
+import java.util.HashMap;
+
 public interface ASTVisitor<T> {
     public T visitBaseType(BaseType bt);
     public T visitStructTypeDecl(StructTypeDecl st);
@@ -27,7 +29,7 @@ public interface ASTVisitor<T> {
     public T visitIf(If i);
     public T visitAssign(Assign a);
     public T visitReturn(Return r);    
-
+    
+    
     // to complete ... (should have one visit method for each concrete AST node class)
 }
-// ArrayType: what to do with int?

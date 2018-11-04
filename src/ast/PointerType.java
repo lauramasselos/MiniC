@@ -10,4 +10,11 @@ public class PointerType implements Type {
     public <T> T accept(ASTVisitor<T> v) {
 	return v.visitPointerType(this);
     }
+
+	@Override
+	public int getByteSize(Type t) {
+		// TODO Auto-generated method stub
+		return 4;
+	}
+	
 }
