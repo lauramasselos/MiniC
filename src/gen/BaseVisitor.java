@@ -9,6 +9,7 @@ public class BaseVisitor<T> implements GenVisitor<T> {
 	
 	public int slLabelTag;
 	public int vdLabelTag;
+	public boolean addressAccessed;
 	
 	PrintWriter writer;
 	public BaseVisitor(PrintWriter writer) {

@@ -96,12 +96,8 @@ public class CodeGenerator extends BaseVisitor<Register> {
         // TODO: to complete
     	inGlobalScope = true;
     	writer.println(".data");
-    	for (VarDecl vd : p.varDecls) {
-    		vd.accept(new GlobalVarDeclVisitor(writer));
-    	}
-    	for (FunDecl fd : p.funDecls) {
-    		fd.accept(new StrLiteralVisitor(writer));
-    	}
+    	p.accept(new GlobalVarDeclVisitor(writer));
+    	p.accept(new StrLiteralVisitor(writer));
     	inGlobalScope = false;
     	writer.println(".text");
     	writer.println("j main");
@@ -124,7 +120,39 @@ public class CodeGenerator extends BaseVisitor<Register> {
     @Override
     public Register visitVarExpr(VarExpr v) {
         // TODO: to complete
-        return null;
+    	if (addressAccessed) {
+    		Register reg = getRegister();
+    		if (globalVarDecls.containsKey(v.vd)) {
+//    			if (v.vd.type instanceof ArrayType) {}
+//    			else {
+    				writer.println("la " + reg.toString() + ", " + globalVarDecls.get(v.vd));
+//    			}
+    			
+    		}
+    		return reg;
+    	}
+    	
+    	
+    	
+    	else {
+    		Register reg = getRegister();
+    		if (globalVarDecls.containsKey(v.vd)) {
+//    			if (v.vd.type instanceof ArrayType) {}
+//    			else {
+    				writer.println("la " + reg.toString() + ", " + globalVarDecls.get(v.vd));
+//    			}
+    			
+    		}
+    		writer.println("lw " + reg.toString() + ", (" + reg.toString() + ")");
+    		return reg;
+    	}
+    	
+
+//    	if (globalVarDecls.containsKey(v.vd)) {
+//    		writer.println("la " + reg.toString() + ", " + globalVarDecls.get(v.vd));
+//    	}
+//    	
+//        return reg;
     }
 
 	@Override
@@ -179,7 +207,12 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		Register reg;  // if (e instanceof StrLiteral), base address of string stored in reg
 		for (Expr e : fce.args) {
 			reg = e.accept(this);
-			writer.println("move $a0, " + reg.toString());
+			if (e instanceof VarExpr) {
+				writer.println("lw $a0, (" + reg.toString() + ")");
+			}
+			else {
+				writer.println("move $a0, " + reg.toString());
+			}
 			freeRegister(reg);
 		}
 		
@@ -206,6 +239,11 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		else if (fce.name.equals("read_c")) {
 			writer.println("li $v0, 12");
 			writer.println("syscall"); // $v0 now contains character read
+		}
+		else {
+			writer.println("jal " + fce.name);
+			fce.fd.accept(this);
+			writer.println("jr $ra");
 		}
 		
 		return null;
@@ -289,9 +327,11 @@ public class CodeGenerator extends BaseVisitor<Register> {
 	@Override
 	public Register visitAssign(Assign a) {
 		// TODO Auto-generated method stub
+		addressAccessed = true;
 		Register lhs = a.lhs.accept(this);
+		addressAccessed = false;
 		Register rhs = a.rhs.accept(this);
-		writer.println("sw (" + rhs.toString() + "), (" + lhs.toString() + ")");
+		writer.println("sw " + rhs.toString() + ", (" + lhs.toString() + ")");
 		freeRegister(lhs); freeRegister(rhs);
 		return null;
 	}

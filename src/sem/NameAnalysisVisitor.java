@@ -22,7 +22,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 		String varName = "s"; VarDecl vd1 = new VarDecl(ptype, varName); vds1.add(vd1); // print_s
 		varName = "i"; VarDecl vd2 = new VarDecl(BaseType.INT, varName); vds2.add(vd2);// print_i
 		varName = "c"; VarDecl vd3 = new VarDecl(BaseType.CHAR, varName); vds3.add(vd3);// print_c 
-		varName = "size"; VarDecl vd4 = new VarDecl(BaseType.INT, varName);vds4.add(vd4); // mcalloc
+		varName = "size"; VarDecl vd4 = new VarDecl(BaseType.INT, varName);vds4.add(vd4); // mcmalloc
 		
 		
 		scope.put(new FunSymbol(new FunDecl(BaseType.VOID, "print_s", vds1, new Block(null, null))));
@@ -30,7 +30,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 		scope.put(new FunSymbol(new FunDecl(BaseType.VOID, "print_c", vds3, new Block(null, null))));
 		scope.put(new FunSymbol(new FunDecl(BaseType.CHAR, "read_c", vdsEMPTY, new Block(null, null))));
 		scope.put(new FunSymbol(new FunDecl(BaseType.INT, "read_i", vdsEMPTY, new Block(null, null))));
-		scope.put(new FunSymbol(new FunDecl(new PointerType(BaseType.VOID), "mcalloc", vds4, new Block(null, null))));
+		scope.put(new FunSymbol(new FunDecl(new PointerType(BaseType.VOID), "mcmalloc", vds4, new Block(null, null))));
 
 		for (StructTypeDecl s : p.structTypeDecls) {
 			s.accept(this);
@@ -48,7 +48,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	public Void visitStructTypeDecl(StructTypeDecl sts) {
 		Symbol s = scope.lookupCurrent(sts.structType.name);
 		if (s != null) error("STRUCTURE ALREADY DECLARED");
-		else if (sts.structType.name.equals("print_s")||sts.structType.name.equals("print_i")||sts.structType.name.equals("print_c")||sts.structType.name.equals("read_c")||sts.structType.name.equals("read_i")||sts.structType.name.equals("mcalloc")) error("Can't shadow built-in function");
+		else if (sts.structType.name.equals("print_s")||sts.structType.name.equals("print_i")||sts.structType.name.equals("print_c")||sts.structType.name.equals("read_c")||sts.structType.name.equals("read_i")||sts.structType.name.equals("mcmalloc")) error("Can't shadow built-in function");
 		else scope.put(new StructSymbol(sts));
 		Scope oldScope = scope;
 		scope = new Scope(oldScope);
@@ -65,7 +65,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	public Void visitFunDecl(FunDecl fd) {
 		Symbol s = scope.lookupCurrent(fd.name);
 		if (s!= null) error("FUNCTION ALREADY DECLARED");
-		else if (fd.name.equals("print_s")||fd.name.equals("print_i")||fd.name.equals("print_c")||fd.name.equals("read_c")||fd.name.equals("read_i")||fd.name.equals("mcalloc")) error("Can't shadow built-in function");
+		else if (fd.name.equals("print_s")||fd.name.equals("print_i")||fd.name.equals("print_c")||fd.name.equals("read_c")||fd.name.equals("read_i")||fd.name.equals("mcmalloc")) error("Can't shadow built-in function");
 		else scope.put(new FunSymbol(fd));
 		Scope oldScope = scope;
 		scope = new Scope(oldScope);
@@ -86,7 +86,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 			//System.out.println(vd.varName);
 			error("VARIABLE ALREADY DECLARED");
 		}
-		else if (vd.varName.equals("print_s")||vd.varName.equals("print_i")||vd.varName.equals("print_c")||vd.varName.equals("read_c")||vd.varName.equals("read_i")||vd.varName.equals("mcalloc")) error("Can't shadow built-in function");
+		else if (vd.varName.equals("print_s")||vd.varName.equals("print_i")||vd.varName.equals("print_c")||vd.varName.equals("read_c")||vd.varName.equals("read_i")||vd.varName.equals("mcmalloc")) error("Can't shadow built-in function");
 		else scope.put(new VarSymbol(vd));
 		return null;
 	}
@@ -159,7 +159,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 		Symbol fs = scope.lookup(fce.name);
 		if (fs==null) error("FUNCTION NOT DECLARED");
 		else if (!fs.isFun()) {
-			error("NOT A FUNCTION");
+			error("NOT A FUNCTION" + fce.name);
 			//fce.fd = new FunDecl(BaseType.INT, fce.name, new LinkedList<VarDecl>(), new Block(null, null));
 			//fce.fd.params = new LinkedList<VarDecl>();
 		}

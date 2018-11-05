@@ -9,6 +9,9 @@ void main() {
   print_s((char*) "Wow there are a lot of strings here! 7\n");
   print_s((char*) "Wow there are a lot of strings here! 8\n");
   print_s((char*) "Wow there are a lot of strings here! 9\n");
+}
+
+void main2() {
   print_s((char*) "Wow there are a lot of strings here! 10\n");
   print_s((char*) "Wow there are a lot of strings here! 11\n");
   print_s((char*) "Wow there are a lot of strings here! 12\n");
@@ -19,5 +22,4 @@ void main() {
   print_s((char*) "Wow there are a lot of strings here! 17\n");
   print_s((char*) "Wow there are a lot of strings here! 18\n");
   print_s((char*) "Wow there are a lot of strings here! 19\n");
-
 }

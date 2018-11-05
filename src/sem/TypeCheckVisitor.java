@@ -100,7 +100,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 		    if (!equalTypes(argT, vdT)) {
 		    	//System.out.println("\n" + argT);
 		    	//System.out.println(vdT);
-		      error("Argument types and variable types don't match: FUNCALLEXPR");
+		      error("Argument types and variable types don't match: FUNCALLEXPR " + fce.name + " " + fce.args.toString());
 		    }
 		  }
 		  fce.type = fce.fd.type;
@@ -182,7 +182,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 	public Type visitFieldAccessExpr(FieldAccessExpr fae) {
 		Type structT = fae.struct.accept(this);
 		Type t = null;
-		if (!(structT instanceof StructType)) error("Incorrect type expression: FIELDACCESSEXPR");
+		if (!(structT instanceof StructType)) error("Incorrect type expression: FIELDACCESSEXPR" + structT.toString());
 		else {
 			StructTypeDecl s = ((StructType) structT).stdec;
 			for (VarDecl v : s.varDecls) {
