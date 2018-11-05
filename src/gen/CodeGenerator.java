@@ -100,7 +100,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
     	p.accept(new StrLiteralVisitor(writer));
     	inGlobalScope = false;
     	writer.println(".text");
-    	writer.println("j main");
+    	//writer.println("j main");
     	for (FunDecl fd : p.funDecls) {
     		fd.accept(this);
     	}
