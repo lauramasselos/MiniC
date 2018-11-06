@@ -8,6 +8,7 @@ import ast.*;
 public class BaseVisitor<T> implements GenVisitor<T> {
 	
 	public int generalTag;
+	public int exitLoopTag = 1;
 	public int slLabelTag;
 	public int vdLabelTag;
 	public int loopLabelTag;

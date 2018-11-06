@@ -338,15 +338,23 @@ public class CodeGenerator extends BaseVisitor<Register> {
 	@Override
 	public Register visitWhile(While w) {
 		// TODO Auto-generated method stub
+//		exitLoopTag++;
 		Register reg; int temp = generalTag; String tempstr = "line"+temp;
+		
+		
 		writer.println("\nline" + generalTag + ": "); // line0:
 		generalTag++;
 		reg = w.e.accept(this); generalTag++;
-		writer.println("beq " + reg.toString() + ", 0, line" + generalTag); generalTag--;// line3
+		writer.println("beq " + reg.toString() + ", 0, exitloop"+ exitLoopTag); generalTag--;// line3
+		
 		writer.println("\nline" + generalTag + ": "); generalTag++;// line1
+		exitLoopTag--;
 		w.s.accept(this);
+		exitLoopTag++;
 		writer.println("j "+ tempstr);
-		writer.println("\nline"+generalTag+": "); generalTag++;
+		
+		//exitLoopTag++;
+		writer.println("\nexitloop"+exitLoopTag+": "); generalTag++; 
 		
 		freeRegister(reg);
 		return null;
