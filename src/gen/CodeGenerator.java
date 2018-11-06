@@ -260,28 +260,28 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("ble " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nline" + generalTag + ": ");
-				generalTag++;
+				generalTag++; break;
 			}
 			case LT: {
 				writer.println("li " + res.toString() + ", 0");
 				writer.println("bge " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nline" + generalTag + ": ");
-				generalTag++;
+				generalTag++; break;
 			}
 			case GE: {
 				writer.println("li " + res.toString() + ", 0");
 				writer.println("blt " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nline" + generalTag + ": ");
-				generalTag++;
+				generalTag++; break;
 			}
 			case LE: {
 				writer.println("li " + res.toString() + ", 0");
 				writer.println("bgt " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nline" + generalTag + ": ");
-				generalTag++;
+				generalTag++; break;
 			}
 			
 		}
