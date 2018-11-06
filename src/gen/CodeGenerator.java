@@ -121,6 +121,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
     public Register visitVarExpr(VarExpr v) {
         // TODO: to complete
     	if (addressAccessed) {
+//    		System.out.println("HERE");
     		Register reg = getRegister();
     		if (globalVarDecls.containsKey(v.vd)) {
 //    			if (v.vd.type instanceof ArrayType) {}
@@ -130,20 +131,18 @@ public class CodeGenerator extends BaseVisitor<Register> {
     			
     		}
     		return reg;
-    	}
-    	
-    	
+    	}	
     	
     	else {
-    		Register reg = getRegister();
+    		Register reg = getRegister(); Register reg1 = getRegister();
     		if (globalVarDecls.containsKey(v.vd)) {
 //    			if (v.vd.type instanceof ArrayType) {}
 //    			else {
-    				writer.println("la " + reg.toString() + ", " + globalVarDecls.get(v.vd));
+    				writer.println("la " + reg1.toString() + ", " + globalVarDecls.get(v.vd));
 //    			}
     			
     		}
-    		writer.println("lw " + reg.toString() + ", (" + reg.toString() + ")");
+    		writer.println("lw " + reg.toString() + ", (" + reg1.toString() + ")"); freeRegister(reg1);
     		return reg;
     	}
     	
@@ -207,12 +206,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		Register reg;  // if (e instanceof StrLiteral), base address of string stored in reg
 		for (Expr e : fce.args) {
 			reg = e.accept(this);
-			if (e instanceof VarExpr) {
-				writer.println("lw $a0, (" + reg.toString() + ")");
-			}
-			else {
-				writer.println("move $a0, " + reg.toString());
-			}
+			writer.println("move $a0, " + reg.toString());
 			freeRegister(reg);
 		}
 		
@@ -261,6 +255,35 @@ public class CodeGenerator extends BaseVisitor<Register> {
 			case MUL: writer.println("mul " + res.toString() + ", " + lhs.toString() + ", " + rhs.toString()); break;
 			case DIV: writer.println("div " + res.toString() + ", " + lhs.toString() + ", " + rhs.toString()); break;
 			case MOD: writer.println("div " + lhs.toString() + ", " + rhs.toString()); writer.println("mfhi " + res.toString()); break;
+			case GT: {
+				writer.println("li " + res.toString() + ", 0");
+				writer.println("ble " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
+				writer.println("li " + res.toString() + ", 1");
+				writer.println("\nline" + generalTag + ": ");
+				generalTag++;
+			}
+			case LT: {
+				writer.println("li " + res.toString() + ", 0");
+				writer.println("bge " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
+				writer.println("li " + res.toString() + ", 1");
+				writer.println("\nline" + generalTag + ": ");
+				generalTag++;
+			}
+			case GE: {
+				writer.println("li " + res.toString() + ", 0");
+				writer.println("blt " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
+				writer.println("li " + res.toString() + ", 1");
+				writer.println("\nline" + generalTag + ": ");
+				generalTag++;
+			}
+			case LE: {
+				writer.println("li " + res.toString() + ", 0");
+				writer.println("bgt " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
+				writer.println("li " + res.toString() + ", 1");
+				writer.println("\nline" + generalTag + ": ");
+				generalTag++;
+			}
+			
 		}
 		freeRegister(lhs); freeRegister(rhs);
 		return res;
@@ -298,7 +321,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 
 	@Override
 	public Register visitTypecastExpr(TypecastExpr te) {
-		// TODO Auto-generated method stub
+		// DON'T TOUCH THIS THIS IS DONE
 		Register res = te.e.accept(this);
 		return res;
 	}
@@ -315,8 +338,61 @@ public class CodeGenerator extends BaseVisitor<Register> {
 	@Override
 	public Register visitWhile(While w) {
 		// TODO Auto-generated method stub
+		Register reg; int temp = generalTag; String tempstr = "line"+temp;
+		writer.println("\nline" + generalTag + ": "); // line0:
+		generalTag++;
+		reg = w.e.accept(this); generalTag++;
+		writer.println("beq " + reg.toString() + ", 0, line" + generalTag); generalTag--;// line3
+		writer.println("\nline" + generalTag + ": "); generalTag++;// line1
+		w.s.accept(this);
+		writer.println("j "+ tempstr);
+		writer.println("\nline"+generalTag+": "); generalTag++;
+		
+		freeRegister(reg);
 		return null;
 	}
+	
+	
+	/*n = 5;
+	 * while (n > 0) {
+    	print_i(n);
+    	n = n - 1;
+  	}
+  	
+  	
+  	
+  	
+  	
+  		reg = w.e.accept(this) = resultof(n > 0)
+  		
+  		
+  		writer.println("li " + res.toString() + ", 0");
+				writer.println("ble " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
+				writer.println("li " + res.toString() + ", 1");
+				writer.println("line" + generalTag + ": ");
+				generalTag++;
+  	line0:
+  	li $r, 0
+  	ble $n, $0, line1
+  	li $r, 1
+  	line1:
+  	
+  	
+  	beq $r, 0, line3
+  	line2:
+  	{accept statement}
+  	li $a0, n
+  	li $v0, 1
+  	syscall
+  	{n = n-1}
+  	j line0
+  	line3:
+  	
+	 * 
+	 */
+	
+	
+	
 
 	@Override
 	public Register visitIf(If i) {
@@ -332,7 +408,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		addressAccessed = false;
 		Register rhs = a.rhs.accept(this);
 		writer.println("sw " + rhs.toString() + ", (" + lhs.toString() + ")");
-		freeRegister(lhs); freeRegister(rhs);
+		freeRegister(lhs); freeRegister(rhs); //addressAccessed = true;
 		return null;
 	}
 
