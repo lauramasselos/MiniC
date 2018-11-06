@@ -353,46 +353,6 @@ public class CodeGenerator extends BaseVisitor<Register> {
 	}
 	
 	
-	/*n = 5;
-	 * while (n > 0) {
-    	print_i(n);
-    	n = n - 1;
-  	}
-  	
-  	
-  	
-  	
-  	
-  		reg = w.e.accept(this) = resultof(n > 0)
-  		
-  		
-  		writer.println("li " + res.toString() + ", 0");
-				writer.println("ble " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
-				writer.println("li " + res.toString() + ", 1");
-				writer.println("line" + generalTag + ": ");
-				generalTag++;
-  	line0:
-  	li $r, 0
-  	ble $n, $0, line1
-  	li $r, 1
-  	line1:
-  	
-  	
-  	beq $r, 0, line3
-  	line2:
-  	{accept statement}
-  	li $a0, n
-  	li $v0, 1
-  	syscall
-  	{n = n-1}
-  	j line0
-  	line3:
-  	
-	 * 
-	 */
-	
-	
-	
 
 	@Override
 	public Register visitIf(If i) {
