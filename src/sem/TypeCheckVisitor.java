@@ -39,7 +39,8 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 	@Override
 	public Type visitFunDecl(FunDecl fd) {
 		Type blockT = fd.block.accept(this);
-		if (blockT == null) blockT = BaseType.VOID;
+		if (blockT == null && fd.name.equals("main")) blockT = fd.type;
+		if (blockT == null && !fd.name.equals("main")) blockT = BaseType.VOID;
 		Type fdT = fd.type;
 		if (!equalTypes(blockT, fdT)) {
 //			System.out.println("\n" + fd.name);
