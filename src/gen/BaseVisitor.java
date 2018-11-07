@@ -7,12 +7,14 @@ import ast.*;
 
 public class BaseVisitor<T> implements GenVisitor<T> {
 	
-	public int generalTag;
-	public int exitLoopTag = 1;
+	public int loopTag;
+	public int binOpTag;
+	public int exitLoopTag = 100;
 	public int slLabelTag;
 	public int vdLabelTag;
 	public int loopLabelTag;
 	public boolean addressAccessed;
+	public boolean inNestedWhileLoop;
 	
 	PrintWriter writer;
 	public BaseVisitor(PrintWriter writer) {

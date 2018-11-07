@@ -246,6 +246,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 	@Override
 	public Register visitBinOp(BinOp bo) {
 		// TODO Auto-generated method stub
+		writer.println("\n# Binary Operation");
 		Register lhs = bo.lhs.accept(this);
 		Register rhs = bo.rhs.accept(this);
 		Register res = getRegister();
@@ -256,32 +257,74 @@ public class CodeGenerator extends BaseVisitor<Register> {
 			case DIV: writer.println("div " + res.toString() + ", " + lhs.toString() + ", " + rhs.toString()); break;
 			case MOD: writer.println("div " + lhs.toString() + ", " + rhs.toString()); writer.println("mfhi " + res.toString()); break;
 			case GT: {
+				writer.println("\n# GT BinOp");
 				writer.println("li " + res.toString() + ", 0");
-				writer.println("ble " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
+				writer.println("ble " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
-				writer.println("\nline" + generalTag + ": ");
-				generalTag++; break;
+				writer.println("\nbinOp" + binOpTag + ": ");
+				binOpTag++; break;
 			}
 			case LT: {
+				writer.println("\n# LT BinOp");
 				writer.println("li " + res.toString() + ", 0");
-				writer.println("bge " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
+				writer.println("bge " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
-				writer.println("\nline" + generalTag + ": ");
-				generalTag++; break;
+				writer.println("\nbinOp" + binOpTag + ": ");
+				binOpTag++; break;
 			}
 			case GE: {
+				writer.println("\n# GE BinOp");
 				writer.println("li " + res.toString() + ", 0");
-				writer.println("blt " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
+				writer.println("blt " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
-				writer.println("\nline" + generalTag + ": ");
-				generalTag++; break;
+				writer.println("\nbinOp" + loopTag + ": ");
+				binOpTag++; break;
 			}
 			case LE: {
+				writer.println("\n# LE BinOp");
 				writer.println("li " + res.toString() + ", 0");
-				writer.println("bgt " + lhs.toString() + ", " + rhs.toString() + ", line" + generalTag);
+				writer.println("bgt " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
-				writer.println("\nline" + generalTag + ": ");
-				generalTag++; break;
+				writer.println("\nbinOp" + binOpTag + ": ");
+				binOpTag++; break;
+			}
+			case EQ: {
+				writer.println("\n# EQ BinOp");
+				writer.println("li " + res.toString() + ", 0");
+				writer.println("bne " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
+				writer.println("li " + res.toString() + ", 1");
+				writer.println("\nbinOp" + binOpTag + ": ");
+				binOpTag++; break;
+			}
+			case NE: {
+				writer.println("\n# NE BinOp");
+				writer.println("li " + res.toString() + ", 0");
+				writer.println("beq " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
+				writer.println("li " + res.toString() + ", 1");
+				writer.println("\nbinOp" + binOpTag + ": ");
+				binOpTag++; break;
+			}
+			case AND: {
+				writer.println("\n# AND BinOp");
+				writer.println("li " + res.toString() + ", 1");
+				writer.println("bne " + lhs.toString() + ", 1, binOp" + binOpTag);
+				writer.println("bne " + rhs.toString() + ", 1, binOp" + binOpTag);
+				writer.println("j binOp"+(binOpTag+1));
+				writer.println("\nbinOp"+binOpTag+": ");
+				writer.println("li " + res.toString() + ", 0"); binOpTag++;
+				writer.println("\nbinOp" + binOpTag + ": ");
+				binOpTag++; break;
+			}
+			case OR: {
+				writer.println("\n# OR BinOp");
+				writer.println("li " + res.toString() + ", 0");
+				writer.println("beq " + lhs.toString() + ", 1, binOp" + binOpTag);
+				writer.println("beq " + rhs.toString() + ", 1, binOp" + binOpTag);
+				writer.println("j binOp"+(binOpTag+1));
+				writer.println("\nbinOp"+binOpTag+": ");
+				writer.println("li " + res.toString() + ", 1"); binOpTag++;
+				writer.println("\nbinOp" + binOpTag + ": ");
+				binOpTag++; break;
 			}
 			
 		}
@@ -339,22 +382,22 @@ public class CodeGenerator extends BaseVisitor<Register> {
 	public Register visitWhile(While w) {
 		// TODO Auto-generated method stub
 //		exitLoopTag++;
-		Register reg; int temp = generalTag; String tempstr = "line"+temp;
+		Register reg; int temp = loopTag; String tempstr = "line"+temp;
 		
 		
-		writer.println("\nline" + generalTag + ": "); // line0:
-		generalTag++;
-		reg = w.e.accept(this); generalTag++;
-		writer.println("beq " + reg.toString() + ", 0, exitloop"+ exitLoopTag); generalTag--;// line3
+		writer.println("\nline" + loopTag + ": "); // line0:
+		loopTag++;
+		reg = w.e.accept(this); loopTag++;
+		writer.println("beq " + reg.toString() + ", 0, exitloop"+ exitLoopTag); loopTag--;// line3
 		
-		writer.println("\nline" + generalTag + ": "); generalTag++;// line1
+		writer.println("\nline" + loopTag + ": "); loopTag++;// line1
 		exitLoopTag--;
 		w.s.accept(this);
 		exitLoopTag++;
 		writer.println("j "+ tempstr);
 		
 		//exitLoopTag++;
-		writer.println("\nexitloop"+exitLoopTag+": "); generalTag++; 
+		writer.println("\nexitloop"+exitLoopTag+": "); loopTag++; 
 		
 		freeRegister(reg);
 		return null;
@@ -390,3 +433,47 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		return null;
 	}
 }
+
+/*
+ * int temp = loopTag; String tempstr = "line"+temp;
+		if (inNestedWhileLoop) {
+			Register reg; //int temp = generalTag; String tempstr = "line"+temp;
+			writer.println("\n# Start of Nested While loop\n");
+			
+			writer.println("\nline" + loopTag + ": "); // line0:
+			loopTag++; exitLoopTag++;
+			reg = w.e.accept(this); loopTag++;
+			writer.println("beq " + reg.toString() + ", 0, exitloop"+ exitLoopTag); loopTag--;// line3
+			
+			writer.println("\nline" + loopTag + ": "); loopTag++;// line1
+			exitLoopTag--;
+			w.s.accept(this); 
+			if (w.s instanceof While) inNestedWhileLoop = true;
+			if (w.s instanceof Block) {
+				 for (Stmt s : ((Block) w.s).stmts) {
+					 if (s instanceof While) inNestedWhileLoop = true;
+				 }
+			}
+			exitLoopTag++;
+			writer.println("j "+ tempstr + '\n'); freeRegister(reg); 
+			writer.println("\nexitloop"+exitLoopTag+": "); loopTag++; 
+		}
+		
+		else {
+			inNestedWhileLoop = true;
+			Register reg; 
+			writer.println("\n# Start of While loop\n");
+			
+			writer.println("\nline" + loopTag + ": "); // line0:
+			loopTag++; exitLoopTag++;
+			reg = w.e.accept(this); loopTag++;
+			writer.println("beq " + reg.toString() + ", 0, exitloop"+ exitLoopTag); loopTag--;// line3
+			exitLoopTag--;
+			writer.println("\nline" + loopTag + ": "); loopTag++;// line1
+			exitLoopTag--;
+			w.s.accept(this); 
+			exitLoopTag++;
+			writer.println("j "+ tempstr);
+			writer.println("\nexitloop"+exitLoopTag+": "); loopTag++; 
+			inNestedWhileLoop = false; freeRegister(reg);
+		}*/
