@@ -142,7 +142,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 //    			}
     			
     		}
-    		writer.println("lw " + reg.toString() + ", (" + reg1.toString() + ")"); freeRegister(reg1);
+    		writer.println("lw " + reg.toString() + ", 0(" + reg1.toString() + ")"); freeRegister(reg1);
     		return reg;
     	}
     	
@@ -262,6 +262,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("ble " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nbinOp" + binOpTag + ": ");
+				writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case LT: {
@@ -270,6 +271,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("bge " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nbinOp" + binOpTag + ": ");
+				writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case GE: {
@@ -277,7 +279,8 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("li " + res.toString() + ", 0");
 				writer.println("blt " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
-				writer.println("\nbinOp" + loopTag + ": ");
+				writer.println("\nbinOp" + binOpTag + ": ");
+				writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case LE: {
@@ -286,6 +289,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("bgt " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nbinOp" + binOpTag + ": ");
+				writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case EQ: {
@@ -294,6 +298,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("bne " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nbinOp" + binOpTag + ": ");
+				writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case NE: {
@@ -302,6 +307,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("beq " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nbinOp" + binOpTag + ": ");
+				writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case AND: {
@@ -313,6 +319,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("\nbinOp"+binOpTag+": ");
 				writer.println("li " + res.toString() + ", 0"); binOpTag++;
 				writer.println("\nbinOp" + binOpTag + ": ");
+				writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case OR: {
@@ -324,6 +331,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("\nbinOp"+binOpTag+": ");
 				writer.println("li " + res.toString() + ", 1"); binOpTag++;
 				writer.println("\nbinOp" + binOpTag + ": ");
+				writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			
@@ -377,28 +385,20 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		if (reg != null) freeRegister(reg);
 		return null;
 	}
-
+	
 	@Override
 	public Register visitWhile(While w) {
-		// TODO Auto-generated method stub
-//		exitLoopTag++;
-		Register reg; int temp = loopTag; String tempstr = "line"+temp;
-		
-		
-		writer.println("\nline" + loopTag + ": "); // line0:
-		loopTag++;
-		reg = w.e.accept(this); loopTag++;
-		writer.println("beq " + reg.toString() + ", 0, exitloop"+ exitLoopTag); loopTag--;// line3
-		
-		writer.println("\nline" + loopTag + ": "); loopTag++;// line1
-		exitLoopTag--;
+		Register reg; 
+		String label0 = label("startWhile_");
+		String label1 = label("while_");
+		String label2 = label("exitLoop_");
+		writer.println("\n"+label0 + ": "); 
+		reg = w.e.accept(this);
+		writer.println("beq " + reg.toString() + ", 0, "+ label2); 
+		writer.println("\n"+label1 + ": "); 
 		w.s.accept(this);
-		exitLoopTag++;
-		writer.println("j "+ tempstr);
-		
-		//exitLoopTag++;
-		writer.println("\nexitloop"+exitLoopTag+": "); loopTag++; 
-		
+		writer.println("j "+ label0);	
+		writer.println("\n"+label2 +": "); 	
 		freeRegister(reg);
 		return null;
 	}
@@ -418,7 +418,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		Register lhs = a.lhs.accept(this);
 		addressAccessed = false;
 		Register rhs = a.rhs.accept(this);
-		writer.println("sw " + rhs.toString() + ", (" + lhs.toString() + ")");
+		writer.println("sw " + rhs.toString() + ", 0(" + lhs.toString() + ")");
 		freeRegister(lhs); freeRegister(rhs); //addressAccessed = true;
 		return null;
 	}

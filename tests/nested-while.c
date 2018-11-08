@@ -6,14 +6,34 @@ void main() {
   while (n > 0) {
     print_i(n);
      print_c('\n');
+
     while (n > 3) {
       print_s((char*) "I'm greater than 3!\n");
-       n = n-1;
+        n = n-1;
        print_i(n);
        print_c('\n');
     }
+
+    while (n > 1) {
+      print_s((char*) "I'm greater than 1!\n");
+        n = n-1;
+       print_i(n);
+       print_c('\n');
+    }
+
     n = n-1;
   }
    print_s((char*) "Blast Off.\n");
    print_i(n); print_c('\n');
 }
+/*
+line0:
+{binop expression}
+beq $r, 0, exitLoop100
+line
+
+
+
+
+
+*/

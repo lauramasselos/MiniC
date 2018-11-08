@@ -15,6 +15,9 @@ public class GlobalVarDeclVisitor extends BaseVisitor<Void> {
 			String vdLabel = "globalvar" + vdLabelTag;
 			vdLabelTag++;
 			globalVarDecls.put(vd, vdLabel);
+			if (vd.type == BaseType.CHAR) {
+				writer.println(".align 2");
+			}
 			writer.println(vdLabel + ": .space " + vd.type.getByteSize(vd.type));
 		}
 		
