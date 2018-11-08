@@ -408,6 +408,30 @@ public class CodeGenerator extends BaseVisitor<Register> {
 	@Override
 	public Register visitIf(If i) {
 		// TODO Auto-generated method stub
+		Register reg;
+		if (i.s2 != null) {
+			String label0 = label("if_");
+			String label1 = label("else_");
+			String label2 = label("exitIf_");
+			writer.println("\n" + label0 + ": ");
+			reg = i.e.accept(this);
+			writer.println("beq " + reg.toString() + ", 0, " + label1);
+			i.s1.accept(this);
+			writer.println("\nj " + label2);
+			writer.println("\n" + label1 + ": ");
+			i.s2.accept(this);
+			writer.println("\n" + label2 + ": ");
+		}
+		else {
+			String label0 = label("if_");
+			String label1 = label("exitIf_");
+			writer.println("\n" + label0 + ": ");
+			reg = i.e.accept(this);
+			writer.println("beq " + reg.toString() + ", 0, " + label1);
+			i.s1.accept(this);
+			writer.println("\n" + label1 + ": ");
+		}
+		freeRegister(reg);
 		return null;
 	}
 
