@@ -11,10 +11,10 @@ public class PointerType implements Type {
 	return v.visitPointerType(this);
     }
 
-	@Override
-	public int getByteSize(Type t) {
-		// TODO Auto-generated method stub
-		return 4;
-	}
+//	@Override
+//	public int getByteSize(Type t) {
+//		// TODO Auto-generated method stub
+//		return 4;
+//	}
 	
 }

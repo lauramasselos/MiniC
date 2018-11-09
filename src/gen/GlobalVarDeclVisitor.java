@@ -11,16 +11,32 @@ public class GlobalVarDeclVisitor extends BaseVisitor<Void> {
 	}
 
 	public Void visitVarDecl(VarDecl vd) {
-		if (!globalVarDecls.containsKey(vd)) {
-			String vdLabel = "globalvar" + vdLabelTag;
-			vdLabelTag++;
-			globalVarDecls.put(vd, vdLabel);
-			if (vd.type == BaseType.CHAR) {
-				writer.println(".align 2");
+		if (inGlobalScope) {
+			if (!globalVarDecls.containsKey(vd)) {
+				if (!(vd.type instanceof StructType)) {
+					String vdLabel = "global_var_" + vd.varName + "_" + vdLabelTag;
+					vdLabelTag++;
+					globalVarDecls.put(vd, vdLabel);
+					if (vd.type == BaseType.CHAR) {
+						writer.println(".align 2");
+					}
+					writer.println(vdLabel + ": .space " + getByteSize(vd.type));
+				}
+				else {
+					for (VarDecl v : ((StructType) vd.type).stdec.varDecls) {
+						String vdLabel = "struct_" + vd.varName + "_var_" + v.varName + "_" + vdLabelTag;
+						vdLabelTag++;
+						globalVarDecls.put(v, vdLabel);
+//						if (v.type == BaseType.CHAR) {
+//							writer.println(".align 2");
+//						}
+						writer.println(vdLabel + ": .space " + getByteSize(v.type));
+					}
+
+				}
+	
 			}
-			writer.println(vdLabel + ": .space " + vd.type.getByteSize(vd.type));
 		}
-		
 		return null;
 	}
 	

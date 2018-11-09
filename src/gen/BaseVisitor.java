@@ -10,9 +10,12 @@ public class BaseVisitor<T> implements GenVisitor<T> {
 	public int binOpTag;
 	public int slLabelTag;
 	public int vdLabelTag;
+	public int stdLabelTag;
 	public boolean addressAccessed;
+	public boolean inGlobalScope;
 	
 	public int counter = 0;
+	
 	
 	public String label(String s) {
     	String str = s+counter;
@@ -20,12 +23,50 @@ public class BaseVisitor<T> implements GenVisitor<T> {
     	return str;
     }
 	
+//	int charsize = 1;
+	@SuppressWarnings("incomplete-switch")
+	public int getByteSize(Type t) {
+		// TODO Auto-generated method stub
+		if (t instanceof BaseType) {
+			switch((BaseType) t) {
+				case INT: return 4;
+				case CHAR: return 4;
+			}
+		}
+		
+		else if (t instanceof ArrayType) {
+//			charsize = 4;				//word alignment
+			int res =  ((ArrayType) t).n * getByteSize(t);
+//			charsize = 1;
+			return res;
+		}
+		
+		else if (t instanceof PointerType) return 4;
+		
+		else if (t instanceof StructType) {
+			int size = 0;
+//			charsize = 4;
+			//System.out.println(((StructType) t).stdec.varDecls);
+			for (VarDecl vd : ((StructType) t).stdec.varDecls) {
+				//System.out.println(vd.toString());
+				size += getByteSize(vd.type);
+			}
+//			charsize = 1;
+			return size;
+		}
+		
+		
+		System.out.println("This shouldn't happen: BaseType");
+		return 0;
+	}
+	
 	
 	
 	PrintWriter writer;
 	public BaseVisitor(PrintWriter writer) {
 		this.writer = writer;
 	}
+	
 	public BaseVisitor() {
 		
 	}
@@ -38,9 +79,12 @@ public class BaseVisitor<T> implements GenVisitor<T> {
 	@Override
 	public T visitStructTypeDecl(StructTypeDecl st) {
 		st.structType.accept(this);
+		int i = 0;
 		for (VarDecl vd : st.varDecls) {
 			vd.accept(this);
+			i += getByteSize(vd.type);
 		}
+		st.structType.sizeOfStruct = i;
 		return null;
 	}
 
@@ -67,12 +111,15 @@ public class BaseVisitor<T> implements GenVisitor<T> {
 
 	@Override
 	public T visitProgram(Program p) {
+		
 		for (StructTypeDecl st : p.structTypeDecls) {
 			st.accept(this);
-		}
+		} 
+		inGlobalScope = true;
 		for (VarDecl vd : p.varDecls) {
 			vd.accept(this);
-		}
+		} 
+		inGlobalScope = false;
 		for (FunDecl fd : p.funDecls) {
 			fd.accept(this);
 		}

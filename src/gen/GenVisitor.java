@@ -8,9 +8,6 @@ public interface GenVisitor<T> extends ast.ASTVisitor<T> {
 
     public HashMap<String, String> strings = new HashMap<>();
     public HashMap<VarDecl, String> globalVarDecls = new HashMap<>();
-    
-    public LinkedList<String> labels = new LinkedList<>();
-    
-    
+    public HashMap<StructTypeDecl, String> globalStructTypeDecls = new HashMap<>();  
 
 }

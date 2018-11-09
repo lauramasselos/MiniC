@@ -37,7 +37,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
         freeRegs.push(reg);
     }
 
-
+    public boolean inGlobalScope;
 
     private PrintWriter writer; // use this writer to output the assembly instructions
 
@@ -52,19 +52,12 @@ public class CodeGenerator extends BaseVisitor<Register> {
     }
 
     
-    public boolean inGlobalScope;
+    
     public LinkedList<VarDecl> globalVars = new LinkedList<>();
     
     @Override
     public Register visitBaseType(BaseType bt) {
-    	if (inGlobalScope) {
-    		if (bt == BaseType.INT) {
-    			writer.println(".space 4");
-    		}
-    		if (bt == BaseType.CHAR) {
-    			writer.println(".space 1");
-    		}
-    	}
+    	
         return null;
     }
 
@@ -96,11 +89,18 @@ public class CodeGenerator extends BaseVisitor<Register> {
         // TODO: to complete
     	inGlobalScope = true;
     	writer.println(".data");
+//    	p.accept(new GlobalStructTypeDeclVisitor(writer));
     	p.accept(new GlobalVarDeclVisitor(writer));
     	p.accept(new StrLiteralVisitor(writer));
     	inGlobalScope = false;
     	writer.println(".text");
     	//writer.println("j main");
+    	for (StructTypeDecl st : p.structTypeDecls) {
+    		st.accept(this);
+    	}
+    	for (VarDecl vd : p.varDecls) {
+    		vd.accept(this);
+    	}
     	for (FunDecl fd : p.funDecls) {
     		fd.accept(this);
     	}
@@ -113,7 +113,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
     @Override
     public Register visitVarDecl(VarDecl vd) {
         // TODO: to complete
-    	vd.accept(this);
+    	vd.type.accept(this);
         return null;
     }
 
@@ -127,11 +127,14 @@ public class CodeGenerator extends BaseVisitor<Register> {
 //    			if (v.vd.type instanceof ArrayType) {}
 //    			else {
     				writer.println("la " + reg.toString() + ", " + globalVarDecls.get(v.vd));
-//    			}
-    			
     		}
-    		return reg;
-    	}	
+    		else {
+    			writer.println("la " + reg.toString() + ", " + -1*v.vd.vdOffset +  "($fp)");
+    		}
+    			
+    		
+    		return reg;}
+    		
     	
     	else {
     		Register reg = getRegister(); Register reg1 = getRegister();
@@ -163,15 +166,14 @@ public class CodeGenerator extends BaseVisitor<Register> {
 	@Override
 	public Register visitPointerType(PointerType pt) {
 		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
 	@Override
 	public Register visitArrayType(ArrayType at) {
 		// TODO Auto-generated method stub
-		if (inGlobalScope) {
-				writer.println(".space " + (at.n * at.typeA.getByteSize(at.typeA)));
-		}
+		
 		return null;
 	}
 
@@ -262,7 +264,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("ble " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nbinOp" + binOpTag + ": ");
-				writer.println("\n#END OF OP\n");
+				//writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case LT: {
@@ -271,7 +273,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("bge " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nbinOp" + binOpTag + ": ");
-				writer.println("\n#END OF OP\n");
+				//writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case GE: {
@@ -280,7 +282,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("blt " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nbinOp" + binOpTag + ": ");
-				writer.println("\n#END OF OP\n");
+				//writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case LE: {
@@ -289,7 +291,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("bgt " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nbinOp" + binOpTag + ": ");
-				writer.println("\n#END OF OP\n");
+				//writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case EQ: {
@@ -298,7 +300,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("bne " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nbinOp" + binOpTag + ": ");
-				writer.println("\n#END OF OP\n");
+				//writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case NE: {
@@ -307,7 +309,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("beq " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("\nbinOp" + binOpTag + ": ");
-				writer.println("\n#END OF OP\n");
+				//writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case AND: {
@@ -319,7 +321,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("\nbinOp"+binOpTag+": ");
 				writer.println("li " + res.toString() + ", 0"); binOpTag++;
 				writer.println("\nbinOp" + binOpTag + ": ");
-				writer.println("\n#END OF OP\n");
+				//writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			case OR: {
@@ -331,7 +333,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("\nbinOp"+binOpTag+": ");
 				writer.println("li " + res.toString() + ", 1"); binOpTag++;
 				writer.println("\nbinOp" + binOpTag + ": ");
-				writer.println("\n#END OF OP\n");
+				//writer.println("\n#END OF OP\n");
 				binOpTag++; break;
 			}
 			
@@ -361,13 +363,36 @@ public class CodeGenerator extends BaseVisitor<Register> {
 	@Override
 	public Register visitValueAtExpr(ValueAtExpr vae) {
 		// TODO Auto-generated method stub
-		return null;
+		if (addressAccessed) {
+			Register res = getRegister();
+			Register reg = vae.e.accept(this);
+			writer.println("la " + res.toString() + ", (" + reg.toString() + ")");
+			freeRegister(reg); return res;
+		}
+		else {
+			Register res = getRegister();
+			Register reg = vae.e.accept(this);
+			writer.println("lw " + res.toString() + ", (" + reg.toString() + ")");
+			freeRegister(reg); return res;
+		}
 	}
 
 	@Override
 	public Register visitSizeOfExpr(SizeOfExpr soe) {
 		// TODO Auto-generated method stub
-		return null;
+		Register reg = getRegister();
+		int size = 0;
+		if (soe.typeSOE instanceof BaseType || soe.typeSOE instanceof PointerType) {
+			size = 4;
+		}
+		else if (soe.typeSOE instanceof ArrayType) {
+			size = ((ArrayType) soe.typeSOE).n * 4;
+		}
+		else if (soe.typeSOE instanceof StructType) {
+			size = ((StructType) soe.typeSOE).sizeOfStruct;
+		}
+		writer.println("li " + reg.toString() + ", " + size);
+		return reg;
 	}
 
 	@Override
@@ -389,9 +414,9 @@ public class CodeGenerator extends BaseVisitor<Register> {
 	@Override
 	public Register visitWhile(While w) {
 		Register reg; 
-		String label0 = label("startWhile_");
+		String label0 = label("start_while_");
 		String label1 = label("while_");
-		String label2 = label("exitLoop_");
+		String label2 = label("exit_while_");
 		writer.println("\n"+label0 + ": "); 
 		reg = w.e.accept(this);
 		writer.println("beq " + reg.toString() + ", 0, "+ label2); 
@@ -412,7 +437,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		if (i.s2 != null) {
 			String label0 = label("if_");
 			String label1 = label("else_");
-			String label2 = label("exitIf_");
+			String label2 = label("exit_if_");
 			writer.println("\n" + label0 + ": ");
 			reg = i.e.accept(this);
 			writer.println("beq " + reg.toString() + ", 0, " + label1);
@@ -424,7 +449,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		}
 		else {
 			String label0 = label("if_");
-			String label1 = label("exitIf_");
+			String label1 = label("exit_if_");
 			writer.println("\n" + label0 + ": ");
 			reg = i.e.accept(this);
 			writer.println("beq " + reg.toString() + ", 0, " + label1);
@@ -456,48 +481,11 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		
 		return null;
 	}
+	
+	
+	
+	
+	
+	
 }
 
-/*
- * int temp = loopTag; String tempstr = "line"+temp;
-		if (inNestedWhileLoop) {
-			Register reg; //int temp = generalTag; String tempstr = "line"+temp;
-			writer.println("\n# Start of Nested While loop\n");
-			
-			writer.println("\nline" + loopTag + ": "); // line0:
-			loopTag++; exitLoopTag++;
-			reg = w.e.accept(this); loopTag++;
-			writer.println("beq " + reg.toString() + ", 0, exitloop"+ exitLoopTag); loopTag--;// line3
-			
-			writer.println("\nline" + loopTag + ": "); loopTag++;// line1
-			exitLoopTag--;
-			w.s.accept(this); 
-			if (w.s instanceof While) inNestedWhileLoop = true;
-			if (w.s instanceof Block) {
-				 for (Stmt s : ((Block) w.s).stmts) {
-					 if (s instanceof While) inNestedWhileLoop = true;
-				 }
-			}
-			exitLoopTag++;
-			writer.println("j "+ tempstr + '\n'); freeRegister(reg); 
-			writer.println("\nexitloop"+exitLoopTag+": "); loopTag++; 
-		}
-		
-		else {
-			inNestedWhileLoop = true;
-			Register reg; 
-			writer.println("\n# Start of While loop\n");
-			
-			writer.println("\nline" + loopTag + ": "); // line0:
-			loopTag++; exitLoopTag++;
-			reg = w.e.accept(this); loopTag++;
-			writer.println("beq " + reg.toString() + ", 0, exitloop"+ exitLoopTag); loopTag--;// line3
-			exitLoopTag--;
-			writer.println("\nline" + loopTag + ": "); loopTag++;// line1
-			exitLoopTag--;
-			w.s.accept(this); 
-			exitLoopTag++;
-			writer.println("j "+ tempstr);
-			writer.println("\nexitloop"+exitLoopTag+": "); loopTag++; 
-			inNestedWhileLoop = false; freeRegister(reg);
-		}*/
