@@ -81,16 +81,24 @@ public class CodeGenerator extends BaseVisitor<Register> {
     	varOffset = 0;
         // TODO: to complete
     	if (!funCallExpr) writer.println(fd.name + ": ");
-    	if (funCallExpr) writer.println("\n# ENTERING FUNCTION " + fd.name);
+    	
     	if (!fd.name.equals("main")) {
-    		int paramsize = 0;
-    		for (VarDecl v : fd.params) paramsize += getByteSize(v.type);
-    		writer.println("addi $sp, $sp, -" + paramsize);
-    		if (!funCallExpr) writer.println("\n# ENTERING BLOCK\n");
+    		int paramByteSize = 0;
+    		for (VarDecl v : fd.params) paramByteSize += getByteSize(v.type); // $fp stored at 0($sp)
+    		writer.println("addi $sp, $sp, -" + paramByteSize); // $fp stored at paramByteSize($sp)
+//    		for (VarDecl v : fd.params) {
+    			//AOSDGA
+//    		}
+    		
+    		
+    		
+    		
+    		
     		fd.block.accept(this);
-    		writer.println("addi $sp, $sp, " + paramsize);
-    		if (!funCallExpr) writer.println("jr $ra");
+    		writer.println("addi $sp, $sp, " + paramByteSize);
+    		if (!funCallExpr) writer.println("jr $ra"); // check if this should be here
     	}
+
     	else {
     		fd.block.accept(this);
     		writer.println("li $v0, 10");
@@ -115,8 +123,8 @@ public class CodeGenerator extends BaseVisitor<Register> {
     	writer.println("sw $fp, ($sp)"); // old frame pointer stored at top of stack
     	writer.println("add $fp, $sp, $zero"); // update frame pointer
     	// nb check when $sp will be updated-- atm only for funcallexpr and nested blocks
-    	for (Register r : Register.tmpRegs) {
-    		storingOffset-=4;
+    	for (int i = 0; i < Register.tmpRegs.size(); i++) {
+    		storingOffset-=4; Register r = Register.tmpRegs.get(i);
     		writer.println("sw " + r.toString() + ", " + storingOffset + "($sp)" );
     	} 
     	writer.println("addi $sp, $sp, " + storingOffset); // update stack pointer 
@@ -128,7 +136,9 @@ public class CodeGenerator extends BaseVisitor<Register> {
     	// CHECK THIS BC ALLY IS A CUCK TODO 
     	writer.println("LOADING_ALL_REGISTERS_FROM_STACK: ");
     	writer.println("addi $sp, $sp, " + (-1*storingOffset));
-    	for (Register r : Register.tmpRegs) {
+    	
+    	for (int i = Register.tmpRegs.size()-1; i >=0 ; i--) {
+    		Register r = Register.tmpRegs.get(i);
     		writer.println("lw " + r.toString() + ", " + storingOffset + "($sp)" );
     		storingOffset+=4;
     	} 
@@ -202,10 +212,14 @@ public class CodeGenerator extends BaseVisitor<Register> {
 //    			if (v.vd.type instanceof ArrayType) {}
 //    			else {
     				writer.println("la " + reg1.toString() + ", " + globalVarDecls.get(v.vd));
+    				writer.println("lw " + reg.toString() + ", 0(" + reg1.toString() + ")"); freeRegister(reg1); usedRegs.remove(reg1);
 //    			}
     			
     		} // TODO Fix VarExpr for RHSofAssign: am I loading from an offset of fp?
-    		writer.println("lw " + reg.toString() + ", 0(" + reg1.toString() + ")"); freeRegister(reg1); usedRegs.remove(reg1);
+    		else {
+    			writer.println("lw " + reg.toString() + ", " + -1*v.vd.vdOffset +  "($fp)");
+    		}
+    		
     		return reg;
     	}
     	
@@ -306,7 +320,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		
 		else if (fce.name.equals("read_i")) {
 			reg = getRegister();
-			writer.println("li $v0, 5     # Reading int"); 
+			writer.println("li $v0, 5"); 
 			writer.println("syscall"); // $v0 now contains integer read
 			writer.println("move " + reg.toString() + ", $v0");
 			return reg;
@@ -346,14 +360,29 @@ public class CodeGenerator extends BaseVisitor<Register> {
 			
 			
 			//TODO push arguments onto the stack first
-			for (Expr v : fce.args) {
-				Register arg = ((VarExpr) v).accept(this);
-				writer.println("");
+			
+			int paramsize = fce.args.size();
+			for (int i = 0; i < paramsize; i++) {
+				Register arg = fce.args.get(i).accept(this);
+				writer.println("sw " + arg.toString() + ", " + -1*i*4 + "($fp)"); // this frame pointer will be stored at the top of the stack
 			}
 			
-			
+
 			
 			writer.println("jal STORING_ALL_REGISTERS_ONTO_STACK");
+			writer.println("STORING_ALL_REGISTERS_ONTO_STACK: ");
+	    	
+//	    	writer.println("sw $fp, ($sp)"); // old frame pointer stored at top of stack
+//	    	writer.println("add $fp, $sp, $zero"); // update frame pointer
+//	    	// nb check when $sp will be updated-- atm only for funcallexpr and nested blocks
+//	    	for (Register r : Register.tmpRegs) {
+//	    		storingOffset-=4;
+//	    		writer.println("sw " + r.toString() + ", " + storingOffset + "($sp)" );
+//	    	} 
+//	    	writer.println("addi $sp, $sp, " + storingOffset); // update stack pointer 
+//	    	
+//	    	writer.println("jr $ra"); // storingOffset = -72
+//	    	
 			
 //			writer.println("add $fp, $sp, $zero");
 			System.out.println("\n\n\n HI THERE \n\n\n");
@@ -627,6 +656,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 			Register lhs = a.lhs.accept(this);
 			lhsOfAssign = false;
 			Register rhs = a.rhs.accept(this);
+//			int offset = ((VarExpr) a.rhs).vd.v.vdOffset;
 			writer.println("sw " + rhs.toString() + ", 0(" + lhs.toString() + ")");
 			freeRegister(lhs); usedRegs.remove(lhs);
 			freeRegister(rhs); usedRegs.remove(rhs);
