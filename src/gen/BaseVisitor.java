@@ -20,6 +20,12 @@ public class BaseVisitor<T> implements GenVisitor<T> {
 	public int counter = 0;
 	
 	
+	
+	public int localVarByteSize;
+	
+	
+	
+	
 	public String label(String s) {
     	String str = s+counter;
 		counter++;

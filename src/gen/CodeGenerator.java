@@ -58,7 +58,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
     @Override
     public Register visitBaseType(BaseType bt) {
     	if (!inGlobalScope) {
-    		writer.print("-4");
+//    		writer.print("-4");
     	}
         return null;
     }
@@ -100,7 +100,17 @@ public class CodeGenerator extends BaseVisitor<Register> {
     	}
 
     	else {
+			for (VarDecl v : fd.block.vds) {
+				localVarByteSize += getByteSize(v.type);
+			}
+			
+			writer.println("addi $sp, $sp, -" + (localVarByteSize+8));
+			writer.println("sw $ra, " + (localVarByteSize+4) + "($sp)");
+			writer.println("sw $fp, " + localVarByteSize + "($sp)");
+			writer.println("move $fp, $sp");
     		fd.block.accept(this);
+    		writer.println("lw $fp, ($fp)");
+    		writer.println("addi $sp, $sp, " + (localVarByteSize+8));
     		writer.println("li $v0, 10");
     		writer.println("syscall");
     	}
@@ -175,9 +185,9 @@ public class CodeGenerator extends BaseVisitor<Register> {
         // TODO: VarDecl: I think this is done?
     	//vd.type.accept(this);
     	if (!inGlobalScope) {
-    		writer.print("addi $sp, $sp, ");
-    		vd.type.accept(this);
-    		writer.println();
+//    		writer.print("addi $sp, $sp, ");
+//    		vd.type.accept(this);
+//    		writer.println();
     		vd.vdOffset = varOffset + getByteSize(vd.type);
     		varOffset += getByteSize(vd.type); // to save local vars on stack; reset each time new fundecl 
     	}
@@ -198,7 +208,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 //    			}
     		}
     		else {
-    			writer.println("lw " + reg.toString() + ", " + -1*v.vd.vdOffset +  "($fp)"); // set offset laura dammit
+    			writer.println("la " + reg.toString() + ", " + v.vd.vdOffset +  "($fp)"); // set offset laura dammit
     		}
     			
     		
@@ -207,18 +217,19 @@ public class CodeGenerator extends BaseVisitor<Register> {
     		
     	
     	else {
-    		Register reg = getRegister(); Register reg1 = getRegister(); usedRegs.push(reg); usedRegs.push(reg1);
+    		Register reg = getRegister(); //Register reg1 = getRegister(); usedRegs.push(reg); usedRegs.push(reg1);
     		if (globalVarDecls.containsKey(v.vd)) {
 //    			if (v.vd.type instanceof ArrayType) {}
 //    			else {
-    				writer.println("la " + reg1.toString() + ", " + globalVarDecls.get(v.vd));
-    				writer.println("lw " + reg.toString() + ", 0(" + reg1.toString() + ")"); freeRegister(reg1); usedRegs.remove(reg1);
+    				writer.println("la " + reg.toString() + ", " + globalVarDecls.get(v.vd));
+//    				writer.println("lw " + reg.toString() + ", 0(" + reg1.toString() + ")"); freeRegister(reg1); usedRegs.remove(reg1);
 //    			}
     			
     		} // TODO Fix VarExpr for RHSofAssign: am I loading from an offset of fp?
     		else {
-    			writer.println("lw " + reg.toString() + ", " + -1*v.vd.vdOffset +  "($fp)");
+    			writer.println("la " + reg.toString() + ", " + v.vd.vdOffset +  "($fp)");
     		}
+    		writer.println("lw " + reg.toString() + ", (" + reg.toString() + ")");
     		
     		return reg;
     	}
@@ -233,27 +244,27 @@ public class CodeGenerator extends BaseVisitor<Register> {
 
 	@Override
 	public Register visitStructType(StructType st) {
-		if (!inGlobalScope) {
-			writer.print(-1*st.sizeOfStruct);
-		}
+//		if (!inGlobalScope) {
+//			writer.print(-1*st.sizeOfStruct);
+//		}
 		return null;
 	}
 
 	@Override
 	public Register visitPointerType(PointerType pt) {
-		if (!inGlobalScope) {
-			writer.print("-4");
-		}
+//		if (!inGlobalScope) {
+//			writer.print("-4");
+//		}
 		
 		return null;
 	}
 
 	@Override
 	public Register visitArrayType(ArrayType at) {
-		if (!inGlobalScope) {
-			writer.print(-4*getByteSize(at));
-		}
-		
+//		if (!inGlobalScope) {
+//			writer.print(-4*getByteSize(at));
+//		}
+//		
 		return null;
 	}
 
@@ -362,6 +373,8 @@ public class CodeGenerator extends BaseVisitor<Register> {
 			//TODO push arguments onto the stack first
 			
 			int paramsize = fce.args.size();
+			
+			
 			for (int i = 0; i < paramsize; i++) {
 				Register arg = fce.args.get(i).accept(this);
 				writer.println("sw " + arg.toString() + ", " + -1*i*4 + "($fp)"); // this frame pointer will be stored at the top of the stack
@@ -653,11 +666,11 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		// TODO Auto-generated method stub
 		if (!(a.lhs instanceof FieldAccessExpr)) { // Martin's trick
 			lhsOfAssign = true;
-			Register lhs = a.lhs.accept(this);
+			Register lhs = a.lhs.accept(this); // address of lhs loaded into register
 			lhsOfAssign = false;
-			Register rhs = a.rhs.accept(this);
+			Register rhs = a.rhs.accept(this); // word in rhs loaded into register
 //			int offset = ((VarExpr) a.rhs).vd.v.vdOffset;
-			writer.println("sw " + rhs.toString() + ", 0(" + lhs.toString() + ")");
+			writer.println("sw " + rhs.toString() + ", (" + lhs.toString() + ")");
 			freeRegister(lhs); usedRegs.remove(lhs);
 			freeRegister(rhs); usedRegs.remove(rhs);
 			//addressAccessed = true;
