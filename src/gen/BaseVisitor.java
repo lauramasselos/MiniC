@@ -11,9 +11,12 @@ public class BaseVisitor<T> implements GenVisitor<T> {
 	public int slLabelTag;
 	public int vdLabelTag;
 	public int stdLabelTag;
-	public boolean addressAccessed;
+	public boolean lhsOfAssign;
 	public boolean inGlobalScope;
-	
+	public boolean funCallExpr;
+	public int storingOffset = 0;
+	public int varOffset;
+//	public int offset = 0;
 	public int counter = 0;
 	
 	
@@ -36,7 +39,7 @@ public class BaseVisitor<T> implements GenVisitor<T> {
 		
 		else if (t instanceof ArrayType) {
 //			charsize = 4;				//word alignment
-			int res =  ((ArrayType) t).n * getByteSize(t);
+			int res =  ((ArrayType) t).n * getByteSize(((ArrayType) t).typeA);
 //			charsize = 1;
 			return res;
 		}

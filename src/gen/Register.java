@@ -29,6 +29,7 @@ public class Register {
         for (int i=24; i<=25; i++)
             tmpRegs.add(new Register(i,"t"+(i-24+8)));
     }
+    // 18 temp regs
 
     public static final Register gp = new Register(28,"gp");
     public static final Register sp = new Register(29,"sp");

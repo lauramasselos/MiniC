@@ -18,6 +18,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 
     // contains all the free temporary registers
     private Stack<Register> freeRegs = new Stack<Register>();
+    private Stack<Register> usedRegs = new Stack<Register>();
 
     public CodeGenerator() {
         freeRegs.addAll(Register.tmpRegs);
@@ -36,28 +37,29 @@ public class CodeGenerator extends BaseVisitor<Register> {
     private void freeRegister(Register reg) {
         freeRegs.push(reg);
     }
+    
 
-    public boolean inGlobalScope;
+    
 
     private PrintWriter writer; // use this writer to output the assembly instructions
 
 
     public void emitProgram(Program program, File outputFile) throws FileNotFoundException {
         
-    	// DONT TOUCH
+    
     	writer = new PrintWriter(outputFile);
         visitProgram(program);
         writer.close();
-        // END
+  
     }
 
     
     
-    public LinkedList<VarDecl> globalVars = new LinkedList<>();
-    
     @Override
     public Register visitBaseType(BaseType bt) {
-    	
+    	if (!inGlobalScope) {
+    		writer.print("-4");
+    	}
         return null;
     }
 
@@ -76,10 +78,24 @@ public class CodeGenerator extends BaseVisitor<Register> {
 
     @Override
     public Register visitFunDecl(FunDecl fd) {
+    	varOffset = 0;
         // TODO: to complete
-    	writer.println(fd.name + ": ");
-    	for (VarDecl vd : fd.params) vd.accept(this);
-    	fd.block.accept(this);
+    	if (!funCallExpr) writer.println(fd.name + ": ");
+    	if (funCallExpr) writer.println("\n# ENTERING FUNCTION " + fd.name);
+    	if (!fd.name.equals("main")) {
+    		int paramsize = 0;
+    		for (VarDecl v : fd.params) paramsize += getByteSize(v.type);
+    		writer.println("addi $sp, $sp, -" + paramsize);
+    		if (!funCallExpr) writer.println("\n# ENTERING BLOCK\n");
+    		fd.block.accept(this);
+    		writer.println("addi $sp, $sp, " + paramsize);
+    		if (!funCallExpr) writer.println("jr $ra");
+    	}
+    	else {
+    		fd.block.accept(this);
+    		writer.println("li $v0, 10");
+    		writer.println("syscall");
+    	}
     	
         return null;
     }
@@ -92,60 +108,104 @@ public class CodeGenerator extends BaseVisitor<Register> {
 //    	p.accept(new GlobalStructTypeDeclVisitor(writer));
     	p.accept(new GlobalVarDeclVisitor(writer));
     	p.accept(new StrLiteralVisitor(writer));
-    	inGlobalScope = false;
     	writer.println(".text");
-    	//writer.println("j main");
+    	writer.println("j main");
+    	writer.println("STORING_ALL_REGISTERS_ONTO_STACK: ");
+    	
+    	writer.println("sw $fp, ($sp)"); // old frame pointer stored at top of stack
+    	writer.println("add $fp, $sp, $zero"); // update frame pointer
+    	// nb check when $sp will be updated-- atm only for funcallexpr and nested blocks
+    	for (Register r : Register.tmpRegs) {
+    		storingOffset-=4;
+    		writer.println("sw " + r.toString() + ", " + storingOffset + "($sp)" );
+    	} 
+    	writer.println("addi $sp, $sp, " + storingOffset); // update stack pointer 
+    	
+    	writer.println("jr $ra"); // storingOffset = -72
+    	
+    	
+    	
+    	// CHECK THIS BC ALLY IS A CUCK TODO 
+    	writer.println("LOADING_ALL_REGISTERS_FROM_STACK: ");
+    	writer.println("addi $sp, $sp, " + (-1*storingOffset));
+    	for (Register r : Register.tmpRegs) {
+    		writer.println("lw " + r.toString() + ", " + storingOffset + "($sp)" );
+    		storingOffset+=4;
+    	} 
+    	writer.println("lw $fp, ($fp)"); // restore old framepointer
+
+    	
+    	writer.println("jr $ra");
+    	
+    	
+    	
+    	
+    	
+    	
     	for (StructTypeDecl st : p.structTypeDecls) {
     		st.accept(this);
     	}
     	for (VarDecl vd : p.varDecls) {
     		vd.accept(this);
     	}
+    	inGlobalScope = false;
     	for (FunDecl fd : p.funDecls) {
-    		fd.accept(this);
+    		if (fd.name.equals("main")) fd.accept(this);
+    		writer.println("\n\n");
+    		
     	}
-    	writer.println("li $v0, 10");
-    	writer.println("syscall");
-    	
+    	for (FunDecl fd : p.funDecls) {
+    		if (!fd.name.equals("main")) fd.accept(this);
+    	}
         return null;
     }
 
     @Override
     public Register visitVarDecl(VarDecl vd) {
-        // TODO: to complete
-    	vd.type.accept(this);
+        // TODO: VarDecl: I think this is done?
+    	//vd.type.accept(this);
+    	if (!inGlobalScope) {
+    		writer.print("addi $sp, $sp, ");
+    		vd.type.accept(this);
+    		writer.println();
+    		vd.vdOffset = varOffset + getByteSize(vd.type);
+    		varOffset += getByteSize(vd.type); // to save local vars on stack; reset each time new fundecl 
+    	}
         return null;
     }
 
     @Override
     public Register visitVarExpr(VarExpr v) {
-        // TODO: to complete
-    	if (addressAccessed) {
+        // TODO: VarExpr top
+    	if (lhsOfAssign) {
 //    		System.out.println("HERE");
-    		Register reg = getRegister();
+    		Register reg = getRegister(); usedRegs.push(reg);
     		if (globalVarDecls.containsKey(v.vd)) {
-//    			if (v.vd.type instanceof ArrayType) {}
+//    			if (v.vd.type instanceof ArrayType) {
+//    			}
 //    			else {
     				writer.println("la " + reg.toString() + ", " + globalVarDecls.get(v.vd));
+//    			}
     		}
     		else {
-    			writer.println("la " + reg.toString() + ", " + -1*v.vd.vdOffset +  "($fp)");
+    			writer.println("lw " + reg.toString() + ", " + -1*v.vd.vdOffset +  "($fp)"); // set offset laura dammit
     		}
     			
     		
-    		return reg;}
+    		return reg;
+    	}
     		
     	
     	else {
-    		Register reg = getRegister(); Register reg1 = getRegister();
+    		Register reg = getRegister(); Register reg1 = getRegister(); usedRegs.push(reg); usedRegs.push(reg1);
     		if (globalVarDecls.containsKey(v.vd)) {
 //    			if (v.vd.type instanceof ArrayType) {}
 //    			else {
     				writer.println("la " + reg1.toString() + ", " + globalVarDecls.get(v.vd));
 //    			}
     			
-    		}
-    		writer.println("lw " + reg.toString() + ", 0(" + reg1.toString() + ")"); freeRegister(reg1);
+    		} // TODO Fix VarExpr for RHSofAssign: am I loading from an offset of fp?
+    		writer.println("lw " + reg.toString() + ", 0(" + reg1.toString() + ")"); freeRegister(reg1); usedRegs.remove(reg1);
     		return reg;
     	}
     	
@@ -159,36 +219,40 @@ public class CodeGenerator extends BaseVisitor<Register> {
 
 	@Override
 	public Register visitStructType(StructType st) {
-		// TODO Auto-generated method stub
+		if (!inGlobalScope) {
+			writer.print(-1*st.sizeOfStruct);
+		}
 		return null;
 	}
 
 	@Override
 	public Register visitPointerType(PointerType pt) {
-		// TODO Auto-generated method stub
+		if (!inGlobalScope) {
+			writer.print("-4");
+		}
 		
 		return null;
 	}
 
 	@Override
 	public Register visitArrayType(ArrayType at) {
-		// TODO Auto-generated method stub
+		if (!inGlobalScope) {
+			writer.print(-4*getByteSize(at));
+		}
 		
 		return null;
 	}
 
 	@Override
 	public Register visitStrLiteral(StrLiteral sl) {
-		// TODO Auto-generated method stub
-		Register use = getRegister();
+		Register use = getRegister(); usedRegs.push(use);
 		writer.println("la " + use.toString() + ", " + strings.get(sl.str));
 		return use;
 	}
 
 	@Override
 	public Register visitChrLiteral(ChrLiteral cl) {
-		// TODO Auto-generated method stub
-		Register use = getRegister();
+		Register use = getRegister(); usedRegs.push(use);
 		int asciiChar = (int) cl.c;
 		writer.println("li " + use.toString() + ", " + asciiChar);
 		return use;
@@ -196,62 +260,128 @@ public class CodeGenerator extends BaseVisitor<Register> {
 
 	@Override
 	public Register visitIntLiteral(IntLiteral il) {
-		// TODO Auto-generated method stub
-		Register use = getRegister();
+		Register use = getRegister(); usedRegs.push(use);
 		writer.println("li " + use.toString() + ", " + il.n);
 		return use;
 	}
 
 	@Override
 	public Register visitFunCallExpr(FunCallExpr fce) {
-		// TODO Auto-generated method stub
+		// TODO FunCallExpr
 		Register reg;  // if (e instanceof StrLiteral), base address of string stored in reg
-		for (Expr e : fce.args) {
-			reg = e.accept(this);
-			writer.println("move $a0, " + reg.toString());
-			freeRegister(reg);
-		}
+		funCallExpr = true;
 		
 		
 		if (fce.name.equals("print_i")) {
+			for (Expr e : fce.args) {
+				reg = e.accept(this);
+				writer.println("move $a0, " + reg.toString());
+				freeRegister(reg); usedRegs.remove(reg);
+			}
 			writer.println("li $v0, 1"); // load int to be printed into $a0
-			writer.println("syscall");
+			writer.println("syscall"); 
+			return null;
 		}
 		else if (fce.name.equals("print_s")) {
+			for (Expr e : fce.args) {
+				reg = e.accept(this);
+				writer.println("move $a0, " + reg.toString());
+				freeRegister(reg); usedRegs.remove(reg);
+			}
 			writer.println("li $v0, 4"); // load address of null-terminated string to print into $a0
 			writer.println("syscall");
+			return null;
 		}
 		
 		else if (fce.name.equals("print_c")) {
+			for (Expr e : fce.args) {
+				reg = e.accept(this);
+				writer.println("move $a0, " + reg.toString());
+				freeRegister(reg); usedRegs.remove(reg);
+			}
 			writer.println("li $v0, 11"); // load ASCII character to print into $a0
 			writer.println("syscall");
+			return null;
 		}
 		
 		else if (fce.name.equals("read_i")) {
-			writer.println("li $v0, 5"); 
+			reg = getRegister();
+			writer.println("li $v0, 5     # Reading int"); 
 			writer.println("syscall"); // $v0 now contains integer read
+			writer.println("move " + reg.toString() + ", $v0");
+			return reg;
 		}
 		
 		else if (fce.name.equals("read_c")) {
+			reg = getRegister();
 			writer.println("li $v0, 12");
 			writer.println("syscall"); // $v0 now contains character read
+			writer.println("move " + reg.toString() + ", $v0");
+			return reg;
+		}
+		else if (fce.name.equals("mcmalloc")) {
+	
 		}
 		else {
+			// store each register in usedRegs stack onto the MIPS stack; set $fp == $sp; call and execute function; restore registers and $fp
+			
+//			int a = 0;
+//			for (Expr e : fce.args) {
+//				reg = e.accept(this);
+//				writer.println("add $a" + a + ", $zero, " + reg.toString());
+//				a++;  
+//				if (a==4) {
+//					System.out.println("NOPE"); break;
+//				}
+//				
+////				paramsize += getByteSize(e.type);
+//			}
+			
+//			for (Register r : Register.tmpRegs) {
+//				storingOffset -= 4;
+//				writer.println("sw " + r.toString() + ", " + storingOffset + "($sp)"); //freeRegister(r);
+////				writer.println("addi $sp, $sp, -4");
+//				
+//			}
+			
+			
+			//TODO push arguments onto the stack first
+			for (Expr v : fce.args) {
+				Register arg = ((VarExpr) v).accept(this);
+				writer.println("");
+			}
+			
+			
+			
+			writer.println("jal STORING_ALL_REGISTERS_ONTO_STACK");
+			
+//			writer.println("add $fp, $sp, $zero");
+			System.out.println("\n\n\n HI THERE \n\n\n");
 			writer.println("jal " + fce.name);
-			fce.fd.accept(this);
-			writer.println("jr $ra");
+			fce.fd.accept(this); if (funCallExpr) writer.println("\n# EXITING FUNCTION " + fce.name);
+//			writer.println("add $fp, $sp, $zero");
+			writer.println("jal LOADING_ALL_REGISTERS_FROM_STACK");
+			
+//			for (Register r : usedRegs) {
+//				writer.println("lw " + r.toString() + ", " + storingOffset + "($sp)"); 
+////				writer.println("addi $sp, $sp, 4");
+//				storingOffset += 4;
+//				
+//			}
+//			writer.println("jr $ra");
 		}
-		
+		funCallExpr = false;
 		return null;
 	}
 
 	@Override
 	public Register visitBinOp(BinOp bo) {
-		// TODO Auto-generated method stub
-		writer.println("\n# Binary Operation");
+		// TODO make sure for AND and OR that rhs is not evaluated until after beq/bne lhs.tostring
+		// (see below case AND)
+		writer.println("\n# Binary Operation\n");
 		Register lhs = bo.lhs.accept(this);
 		Register rhs = bo.rhs.accept(this);
-		Register res = getRegister();
+		Register res = getRegister(); usedRegs.push(res);
 		switch(bo.op) {
 			case ADD: writer.println("add " + res.toString() + ", " + lhs.toString() + ", " + rhs.toString()); break;
 			case SUB: writer.println("sub " + res.toString() + ", " + lhs.toString() + ", " + rhs.toString()); break;
@@ -259,7 +389,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 			case DIV: writer.println("div " + res.toString() + ", " + lhs.toString() + ", " + rhs.toString()); break;
 			case MOD: writer.println("div " + lhs.toString() + ", " + rhs.toString()); writer.println("mfhi " + res.toString()); break;
 			case GT: {
-				writer.println("\n# GT BinOp");
+				writer.println("\n# GT BinOp\n");
 				writer.println("li " + res.toString() + ", 0");
 				writer.println("ble " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
@@ -268,7 +398,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				binOpTag++; break;
 			}
 			case LT: {
-				writer.println("\n# LT BinOp");
+				writer.println("\n# LT BinOp\n");
 				writer.println("li " + res.toString() + ", 0");
 				writer.println("bge " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
@@ -277,7 +407,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				binOpTag++; break;
 			}
 			case GE: {
-				writer.println("\n# GE BinOp");
+				writer.println("\n# GE BinOp\n");
 				writer.println("li " + res.toString() + ", 0");
 				writer.println("blt " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
@@ -286,7 +416,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				binOpTag++; break;
 			}
 			case LE: {
-				writer.println("\n# LE BinOp");
+				writer.println("\n# LE BinOp\n");
 				writer.println("li " + res.toString() + ", 0");
 				writer.println("bgt " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
@@ -295,7 +425,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				binOpTag++; break;
 			}
 			case EQ: {
-				writer.println("\n# EQ BinOp");
+				writer.println("\n# EQ BinOp\n");
 				writer.println("li " + res.toString() + ", 0");
 				writer.println("bne " + lhs.toString() + ", " + rhs.toString() + ", binOp" + binOpTag);
 				writer.println("li " + res.toString() + ", 1");
@@ -313,9 +443,10 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				binOpTag++; break;
 			}
 			case AND: {
-				writer.println("\n# AND BinOp");
+				writer.println("\n# AND BinOp\n");
 				writer.println("li " + res.toString() + ", 1");
 				writer.println("bne " + lhs.toString() + ", 1, binOp" + binOpTag);
+//				Register rhs = bo.rhs.accept(this);
 				writer.println("bne " + rhs.toString() + ", 1, binOp" + binOpTag);
 				writer.println("j binOp"+(binOpTag+1));
 				writer.println("\nbinOp"+binOpTag+": ");
@@ -325,7 +456,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				binOpTag++; break;
 			}
 			case OR: {
-				writer.println("\n# OR BinOp");
+				writer.println("\n# OR BinOp\n");
 				writer.println("li " + res.toString() + ", 0");
 				writer.println("beq " + lhs.toString() + ", 1, binOp" + binOpTag);
 				writer.println("beq " + rhs.toString() + ", 1, binOp" + binOpTag);
@@ -338,49 +469,77 @@ public class CodeGenerator extends BaseVisitor<Register> {
 			}
 			
 		}
-		freeRegister(lhs); freeRegister(rhs);
+		freeRegister(lhs); freeRegister(rhs); usedRegs.remove(lhs); usedRegs.remove(rhs);
 		return res;
 	}
 
 	@Override
 	public Register visitOp(Op o) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Register visitArrayAccessExpr(ArrayAccessExpr aae) {
-		// TODO Auto-generated method stub
-		return null;
+	
+		if (lhsOfAssign) {
+			Register reg = getRegister(); usedRegs.push(reg);
+			Register r1 = aae.array.accept(this); lhsOfAssign = false;
+			Register r2 = aae.index.accept(this);
+			
+			// space for size of array in bytes
+			writer.println("mul " + r2.toString() + ", " + r2.toString() + ", -" + 4); // try getByteSize(aae.array.type) instead of 4
+			writer.println("add " + reg.toString() + ", " + r1.toString() + ", " + r2.toString());
+			
+			freeRegister(r1); usedRegs.remove(r1);
+			freeRegister(r2); usedRegs.remove(r2);
+			lhsOfAssign = true;
+			return reg;
+		}
+		
+		else {
+			Register reg = getRegister(); usedRegs.push(reg); lhsOfAssign = true;
+			Register r1 = aae.array.accept(this); lhsOfAssign = false;
+			Register r2 = aae.index.accept(this);
+			
+			// space for size of array in bytes
+			writer.println("mul " + r2.toString() + ", " + r2.toString() + ", -" + 4); // try getByteSize(aae.array.type) instead of 4
+			writer.println("add " + reg.toString() + ", " + r1.toString() + ", " + r2.toString());
+			writer.println("lw " + reg.toString() + ", (" + reg.toString() + ")");
+			
+			freeRegister(r1); usedRegs.remove(r1);
+			freeRegister(r2); usedRegs.remove(r2);
+			return reg;
+		}
 	}
 
 	@Override
 	public Register visitFieldAccessExpr(FieldAccessExpr fae) {
-		// TODO Auto-generated method stub
+		// TODO EVERYTHING lol
 		return null;
 	}
 
 	@Override
 	public Register visitValueAtExpr(ValueAtExpr vae) {
-		// TODO Auto-generated method stub
-		if (addressAccessed) {
-			Register res = getRegister();
+		if (lhsOfAssign) {
+			Register res = getRegister(); usedRegs.push(res);
 			Register reg = vae.e.accept(this);
 			writer.println("la " + res.toString() + ", (" + reg.toString() + ")");
-			freeRegister(reg); return res;
+			freeRegister(reg); usedRegs.remove(reg);
+			return res;
 		}
 		else {
-			Register res = getRegister();
+			Register res = getRegister(); usedRegs.push(res);
 			Register reg = vae.e.accept(this);
 			writer.println("lw " + res.toString() + ", (" + reg.toString() + ")");
-			freeRegister(reg); return res;
+			freeRegister(reg); usedRegs.remove(reg);
+			return res;
 		}
 	}
 
 	@Override
 	public Register visitSizeOfExpr(SizeOfExpr soe) {
-		// TODO Auto-generated method stub
-		Register reg = getRegister();
+		// TODO SizeOf(<string>) should be size of chararray rounded up to the nearest 4
+		Register reg = getRegister(); usedRegs.push(reg);
 		int size = 0;
 		if (soe.typeSOE instanceof BaseType || soe.typeSOE instanceof PointerType) {
 			size = 4;
@@ -404,10 +563,11 @@ public class CodeGenerator extends BaseVisitor<Register> {
 
 	@Override
 	public Register visitExprStmt(ExprStmt es) {
-		// TODO Auto-generated method stub
 		Register reg;
 		reg = es.e.accept(this);
-		if (reg != null) freeRegister(reg);
+		if (reg != null) {
+			freeRegister(reg); usedRegs.remove(reg);
+		}
 		return null;
 	}
 	
@@ -424,7 +584,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		w.s.accept(this);
 		writer.println("j "+ label0);	
 		writer.println("\n"+label2 +": "); 	
-		freeRegister(reg);
+		freeRegister(reg); usedRegs.remove(reg);
 		return null;
 	}
 	
@@ -432,7 +592,6 @@ public class CodeGenerator extends BaseVisitor<Register> {
 
 	@Override
 	public Register visitIf(If i) {
-		// TODO Auto-generated method stub
 		Register reg;
 		if (i.s2 != null) {
 			String label0 = label("if_");
@@ -456,28 +615,35 @@ public class CodeGenerator extends BaseVisitor<Register> {
 			i.s1.accept(this);
 			writer.println("\n" + label1 + ": ");
 		}
-		freeRegister(reg);
+		freeRegister(reg); usedRegs.remove(reg);
 		return null;
 	}
 
 	@Override
 	public Register visitAssign(Assign a) {
 		// TODO Auto-generated method stub
-		addressAccessed = true;
-		Register lhs = a.lhs.accept(this);
-		addressAccessed = false;
-		Register rhs = a.rhs.accept(this);
-		writer.println("sw " + rhs.toString() + ", 0(" + lhs.toString() + ")");
-		freeRegister(lhs); freeRegister(rhs); //addressAccessed = true;
+		if (!(a.lhs instanceof FieldAccessExpr)) { // Martin's trick
+			lhsOfAssign = true;
+			Register lhs = a.lhs.accept(this);
+			lhsOfAssign = false;
+			Register rhs = a.rhs.accept(this);
+			writer.println("sw " + rhs.toString() + ", 0(" + lhs.toString() + ")");
+			freeRegister(lhs); usedRegs.remove(lhs);
+			freeRegister(rhs); usedRegs.remove(rhs);
+			//addressAccessed = true;
+		}
+		
 		return null;
 	}
 
 	@Override
 	public Register visitReturn(Return r) {
-		// TODO Auto-generated method stub
 		Register reg;
 		reg = r.e.accept(this);
-		if (reg != null) freeRegister(reg);
+		if (reg != null) {
+			writer.println("move $v0, " + reg.toString());
+			freeRegister(reg); usedRegs.remove(reg);
+		}
 		
 		return null;
 	}
