@@ -10,18 +10,16 @@ public class BaseVisitor<T> implements GenVisitor<T> {
 	public int binOpTag;
 	public int slLabelTag;
 	public int vdLabelTag;
-	public int stdLabelTag;
+
+	
 	public boolean lhsOfAssign;
 	public boolean inGlobalScope;
 	public boolean funCallExpr;
-	public int storingOffset = 0;
-	public int varOffset;
-//	public int offset = 0;
-	public int counter = 0;
-	
-	
-	
-	public int localVarByteSize;
+
+
+	public int storingOffset = 0; // used for block of at top of .text to push/pop registers from the stack
+	public int counter = 0; // used for labelling strings and global vars to ensure label uniqueness
+	public int localVarByteSize; // used to allocate space for local vars, plus $fp plus $ra
 	
 	
 	

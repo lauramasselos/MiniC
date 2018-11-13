@@ -78,11 +78,16 @@ public class CodeGenerator extends BaseVisitor<Register> {
 
     @Override
     public Register visitFunDecl(FunDecl fd) {
-    	varOffset = 0;
+    	localVarByteSize = 0;
         // TODO: to complete
     	if (!funCallExpr) writer.println(fd.name + ": ");
     	
     	if (!fd.name.equals("main")) {
+    		
+    		// when jal STORING_ALL_REGISTERS_ONTO_STACK is called, 
+    		
+    		
+    		
     		int paramByteSize = 0;
     		for (VarDecl v : fd.params) paramByteSize += getByteSize(v.type); // $fp stored at 0($sp)
     		writer.println("addi $sp, $sp, -" + paramByteSize); // $fp stored at paramByteSize($sp)
@@ -103,11 +108,10 @@ public class CodeGenerator extends BaseVisitor<Register> {
 			for (VarDecl v : fd.block.vds) {
 				localVarByteSize += getByteSize(v.type);
 			}
-			
-			writer.println("addi $sp, $sp, -" + (localVarByteSize+8));
-			writer.println("sw $ra, " + (localVarByteSize+4) + "($sp)");
-			writer.println("sw $fp, " + localVarByteSize + "($sp)");
+			writer.println("sw $fp, " + "($sp)");
 			writer.println("move $fp, $sp");
+			writer.println("addi $sp, $sp, -" + (localVarByteSize+8));
+			writer.println("sw $ra, 4($fp)");
     		fd.block.accept(this);
     		writer.println("lw $fp, ($fp)");
     		writer.println("addi $sp, $sp, " + (localVarByteSize+8));
@@ -158,7 +162,13 @@ public class CodeGenerator extends BaseVisitor<Register> {
     	writer.println("jr $ra");
     	
     	
-    	
+//    	writer.println("addi $sp, $sp, -" + (localVarByteSize+8));
+//		writer.println("sw $ra, " + (localVarByteSize+4) + "($sp)");
+//		writer.println("sw $fp, " + localVarByteSize + "($sp)");
+//		writer.println("move $fp, $sp");
+//		fd.block.accept(this);
+//		writer.println("lw $fp, ($fp)");
+//		writer.println("addi $sp, $sp, " + (localVarByteSize+8));
     	
     	
     	
@@ -188,8 +198,8 @@ public class CodeGenerator extends BaseVisitor<Register> {
 //    		writer.print("addi $sp, $sp, ");
 //    		vd.type.accept(this);
 //    		writer.println();
-    		vd.vdOffset = varOffset + getByteSize(vd.type);
-    		varOffset += getByteSize(vd.type); // to save local vars on stack; reset each time new fundecl 
+    		vd.vdOffset = localVarByteSize + getByteSize(vd.type);
+    		localVarByteSize += getByteSize(vd.type); // to save local vars on stack; reset each time new fundecl 
     	}
         return null;
     }
@@ -208,7 +218,7 @@ public class CodeGenerator extends BaseVisitor<Register> {
 //    			}
     		}
     		else {
-    			writer.println("la " + reg.toString() + ", " + v.vd.vdOffset +  "($fp)"); // set offset laura dammit
+    			writer.println("la " + reg.toString() + ", " + v.vd.vdOffset +  "($fp)"); 
     		}
     			
     		
@@ -380,10 +390,18 @@ public class CodeGenerator extends BaseVisitor<Register> {
 				writer.println("sw " + arg.toString() + ", " + -1*i*4 + "($fp)"); // this frame pointer will be stored at the top of the stack
 			}
 			
-
+//			writer.println("addi $sp, $sp, -" + (localVarByteSize+8));
+//			writer.println("sw $ra, " + (localVarByteSize+4) + "($sp)");
+//			writer.println("sw $fp, " + localVarByteSize + "($sp)");
+//			writer.println("move $fp, $sp");
+//    		fd.block.accept(this);
+//    		writer.println("lw $fp, ($fp)");
+//    		writer.println("addi $sp, $sp, " + (localVarByteSize+8));
+//    		writer.println("li $v0, 10");
+//    		writer.println("syscall");
 			
 			writer.println("jal STORING_ALL_REGISTERS_ONTO_STACK");
-			writer.println("STORING_ALL_REGISTERS_ONTO_STACK: ");
+//			writer.println("STORING_ALL_REGISTERS_ONTO_STACK: ");
 	    	
 //	    	writer.println("sw $fp, ($sp)"); // old frame pointer stored at top of stack
 //	    	writer.println("add $fp, $sp, $zero"); // update frame pointer
