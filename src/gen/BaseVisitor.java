@@ -11,7 +11,6 @@ public class BaseVisitor<T> implements GenVisitor<T> {
 	public int slLabelTag;
 	public int vdLabelTag;
 
-	
 	public boolean lhsOfAssign;
 	public boolean inGlobalScope;
 	public boolean funCallExpr;
