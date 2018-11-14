@@ -115,12 +115,12 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
 	@Override
 	public Type visitPointerType(PointerType pt) {
-		return pt;
+		return pt.typeP;
 	}
 
 	@Override
 	public Type visitArrayType(ArrayType at) {
-		return at;
+		return at.typeA;
 	}
 
 	@Override
@@ -169,7 +169,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 	@Override
 	public Type visitArrayAccessExpr(ArrayAccessExpr aae) {
 		// TODO Auto-generated method stub
-		Type arrT = aae.array.accept(this);
+		Type arrT = aae.array.accept(this); 
 		Type indT = aae.index.accept(this);
 		if (indT == BaseType.INT && (arrT instanceof ArrayType || arrT instanceof PointerType)) {
 			aae.type = arrT.accept(this);
@@ -266,6 +266,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 		Type lhsT = a.lhs.accept(this);
 		Type rhsT = a.rhs.accept(this);
 		if (!(lhsT instanceof ArrayType) && !(lhsT == BaseType.VOID) && equalTypes(lhsT, rhsT)) {
+			a.type = lhsT;
 			return lhsT;
 		}
 		else error("Incorrect type expression: ASSIGN");
