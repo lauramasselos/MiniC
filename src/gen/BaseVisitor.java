@@ -14,6 +14,7 @@ public class BaseVisitor<T> implements GenVisitor<T> {
 	public boolean lhsOfAssign;
 	public boolean inGlobalScope;
 	public boolean funCallExpr;
+	public boolean rhsInstanceOfFunCallExpr;
 
 
 	public int storingOffset = 0; // used for block of at top of .text to push/pop registers from the stack
