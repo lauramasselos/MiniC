@@ -154,8 +154,25 @@ public class CodeGenerator extends BaseVisitor<Register> {
     	p.accept(new StrLiteralVisitor(writer));
     	writer.println(".text");
     	writer.println("j main");
-
-
+    	
+    	writer.println("\n\n ##### STORING REGISTERS #####");
+		writer.println("STORING_ALL_REGISTERS: ");
+		for (int i = 0; i < Register.tmpRegs.size(); i++) {
+    		Register r = Register.tmpRegs.get(i);
+    		writer.println("addi $sp, $sp, -4");
+    		writer.println("sw " + r.toString() + ", ($sp)" );
+    		
+    	} 
+		writer.println("jr $ra\n\n");
+		
+		writer.println("\n\n ##### LOADING REGISTERS #####");
+		writer.println("LOADING_ALL_REGISTERS: ");
+		for (int i = Register.tmpRegs.size()-1; i >=0 ; i--) {
+    		Register r = Register.tmpRegs.get(i);
+    		writer.println("addi $sp, $sp, 4");
+    		writer.println("lw " + r.toString() + ", ($sp)" );
+    	} 
+		writer.println("jr $ra\n\n");
     	
     	for (StructTypeDecl st : p.structTypeDecls) {
     		st.accept(this);
@@ -398,16 +415,9 @@ public class CodeGenerator extends BaseVisitor<Register> {
 			writer.println("addi $sp, $sp, -4");
 			writer.println("sw $ra, ($sp)");
 		// PUSH REGISTERS AFTER STORING RA (this is all different; keep above as is!!)
-			writer.println("\n\n ##### STORING REGISTERS #####");
-			
-			for (int i = 0; i < Register.tmpRegs.size(); i++) {
-	    		Register r = Register.tmpRegs.get(i);
-	    		writer.println("addi $sp, $sp, -4");
-	    		writer.println("sw " + r.toString() + ", ($sp)" );
-	    		
-	    	} 
 			
 			
+			writer.println("jal STORING_ALL_REGISTERS");
 			
 			
 //			writer.println("sw $fp, ($sp)"); // old frame pointer stored at top of stack
@@ -442,12 +452,8 @@ public class CodeGenerator extends BaseVisitor<Register> {
 			
 			writer.println("move $sp, $fp");
     		writer.println("lw $fp, ($fp)");
-    		writer.println("\n\n ##### LOADING REGISTERS #####");
-    		for (int i = Register.tmpRegs.size()-1; i >=0 ; i--) {
-	    		Register r = Register.tmpRegs.get(i);
-	    		writer.println("addi $sp, $sp, 4");
-	    		writer.println("lw " + r.toString() + ", ($sp)" );
-	    	} 
+    		writer.println("jal LOADING_ALL_REGISTERS");
+    		
  
     		writer.println("addi $sp, $sp, 4");
 			writer.println("lw $ra, ($sp)");
