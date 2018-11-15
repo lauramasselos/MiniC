@@ -225,9 +225,9 @@ public class CodeGenerator extends BaseVisitor<Register> {
     	else if (!lhsOfAssign && !v.isParam) {
     		
     		Register reg = getRegister(); //Register reg1 = getRegister(); usedRegs.push(reg); usedRegs.push(reg1);
-    		System.out.println(globalVarDecls.get(v.vd));
+//    		System.out.println(globalVarDecls.get(v.vd));
     		if (globalVarDecls.containsKey(v.vd)) {
-    			System.out.println("nani");
+//    			System.out.println("nani");
 //    			if (v.vd.type instanceof ArrayType) {}
 //    			else {
     				varIsGlobal = true;
@@ -253,9 +253,9 @@ public class CodeGenerator extends BaseVisitor<Register> {
     		Register reg = getRegister(); //System.out.println("HELLO THERE4" + v.vd.vdOffset);
     		writer.println("lw " + reg.toString() + ", " + (v.vd.vdOffset) +  "($fp)     # " + v.name + " isParam");
     		
-    		System.out.println("localVarByteSize is " + localVarByteSize + " at variable " + v.name + " with offset " + v.vd.vdOffset);
-    		System.out.println("localVarByteSize - v.vd.vdOffset =     " + (localVarByteSize - v.vd.vdOffset));
-    		System.out.println("\n\n\n");
+//    		System.out.println("localVarByteSize is " + localVarByteSize + " at variable " + v.name + " with offset " + v.vd.vdOffset);
+//    		System.out.println("localVarByteSize - v.vd.vdOffset =     " + (localVarByteSize - v.vd.vdOffset));
+//    		System.out.println("\n\n\n");
     		//writer.println("lw " + reg.toString() + ", (" + reg.toString() + ")");
     		writer.println("addi $sp, $sp, -4");
     		writer.println("sw " + reg.toString() + ", ($sp)");
