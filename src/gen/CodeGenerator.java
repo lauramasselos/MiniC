@@ -204,11 +204,13 @@ public class CodeGenerator extends BaseVisitor<Register> {
 //    			if (v.vd.type instanceof ArrayType) {
 //    			}
 //    			else {
+    				varIsGlobal = true;
     				writer.println("la " + reg.toString() + ", " + globalVarDecls.get(v.vd));
 //    			}
     		}
     		else {
     				if (rhsInstanceOfFunCallExpr) {
+    					varIsGlobal = false;
     					writer.println("lw " + reg.toString() + ", " + v.vd.vdOffset +  "($fp)     # " + v.name + " lhsOfAssign"); 
     					
     				}
@@ -223,9 +225,12 @@ public class CodeGenerator extends BaseVisitor<Register> {
     	else if (!lhsOfAssign && !v.isParam) {
     		
     		Register reg = getRegister(); //Register reg1 = getRegister(); usedRegs.push(reg); usedRegs.push(reg1);
+    		System.out.println(globalVarDecls.get(v.vd));
     		if (globalVarDecls.containsKey(v.vd)) {
+    			System.out.println("nani");
 //    			if (v.vd.type instanceof ArrayType) {}
 //    			else {
+    				varIsGlobal = true;
     				writer.println("la " + reg.toString() + ", " + globalVarDecls.get(v.vd));
     				writer.println("lw " + reg.toString() + ", (" + reg.toString() + ")");
 //    				writer.println("lw " + reg.toString() + ", 0(" + reg1.toString() + ")"); freeRegister(reg1); usedRegs.remove(reg1);
@@ -235,7 +240,8 @@ public class CodeGenerator extends BaseVisitor<Register> {
     		else {
     			//System.out.println("localVarByteSize is " + localVarByteSize + " at variable " + v.name + " with offset " + v.vd.vdOffset);
 //    			if (rhsInstanceOfFunCallExpr) {
-    				writer.println("lw " + reg.toString() + ", " + v.vd.vdOffset +  "($fp)     # " + v.name); 
+    			varIsGlobal = false;	
+    			writer.println("lw " + reg.toString() + ", " + v.vd.vdOffset +  "($fp)     # " + v.name); 
 //    			}
     		}
     		
@@ -442,11 +448,11 @@ public class CodeGenerator extends BaseVisitor<Register> {
 	    		writer.println("addi $sp, $sp, 4");
 	    		writer.println("lw " + r.toString() + ", ($sp)" );
 	    	} 
-    		
-    		writer.println("move " + reg.toString() + ", $v0");
+ 
     		writer.println("addi $sp, $sp, 4");
 			writer.println("lw $ra, ($sp)");
 			writer.println("addi $sp, $sp, 4");
+    		writer.println("move " + reg.toString() + ", $v0");
 			writer.println("\n\n\n");
 			
 			
@@ -733,17 +739,24 @@ public class CodeGenerator extends BaseVisitor<Register> {
 		rhsInstanceOfFunCallExpr = false;
 		// TODO Auto-generated method stub
 		if (!(a.lhs instanceof FieldAccessExpr)) { // Martin's trick
+			Register rhs = a.rhs.accept(this); // word in rhs loaded into register
 			lhsOfAssign = true;
 			Register lhs = a.lhs.accept(this); // address of lhs loaded into register
 			lhsOfAssign = false;
-			Register rhs = a.rhs.accept(this); // word in rhs loaded into register
+			
 			if (a.rhs instanceof FunCallExpr) rhsInstanceOfFunCallExpr = true;
 //			a.type = a.lhs.type;
 //			System.out.println(a.type);
 //			int offset = ((VarExpr) a.rhs).vd.v.vdOffset;
-			writer.println("sw " + rhs.toString() + ", " + a.lhs.exprOffset + "($fp)     # Assigning a variable");
+			if (!varIsGlobal) {
+				writer.println("sw " + rhs.toString() + ", " + a.lhs.exprOffset + "($fp)     # Assigning a variable");
+			}
+			else {
+				writer.println("sw " + rhs.toString() + ", (" + lhs.toString() + ")");
+			}
 			freeRegister(lhs); usedRegs.remove(lhs);
 			freeRegister(rhs); usedRegs.remove(rhs);
+				
 			//addressAccessed = true;
 //			vd.vdOffset = localVarByteSize - getByteSize(vd.type);
 //    		localVarByteSize -= getByteSize(vd.type); v.exprOffset is set
