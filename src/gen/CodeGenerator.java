@@ -233,10 +233,10 @@ public class CodeGenerator extends BaseVisitor<Register> {
 
     		}
     		else {
-    			if (rhsInstanceOfFunCallExpr) {
+//    			if (rhsInstanceOfFunCallExpr) {
     				varIsGlobal = false;
     				writer.println("lw " + reg.toString() + ", " + v.vd.vdOffset +  "($fp)     # " + v.name + " lhsOfAssign"); 	
-    			}
+//    			}
     		}
     		return reg;
     	}

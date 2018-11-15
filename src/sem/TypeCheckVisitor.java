@@ -185,7 +185,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 	public Type visitFieldAccessExpr(FieldAccessExpr fae) {
 		Type structT = fae.struct.accept(this); 
 		Type t = null;
-		if (!(structT instanceof StructType)) error("Incorrect type expression: FIELDACCESSEXPR " + fae.name);
+		if (!(structT instanceof StructType)) error("Incorrect type expression: FIELDACCESSEXPR ");
 		else {
 			StructTypeDecl s = ((StructType) structT).stdec;
 			for (VarDecl v : s.varDecls) {
