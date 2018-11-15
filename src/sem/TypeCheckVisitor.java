@@ -121,6 +121,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
 	@Override
 	public Type visitArrayType(ArrayType at) {
+		at.typeA.accept(this);
 		return at.typeA;
 	}
 
@@ -182,19 +183,20 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
 	@Override
 	public Type visitFieldAccessExpr(FieldAccessExpr fae) {
-		Type structT = fae.struct.accept(this);
+		Type structT = fae.struct.accept(this); 
 		Type t = null;
-		if (!(structT instanceof StructType)) error("Incorrect type expression: FIELDACCESSEXPR" + structT.toString());
+		if (!(structT instanceof StructType)) error("Incorrect type expression: FIELDACCESSEXPR " + fae.name);
 		else {
 			StructTypeDecl s = ((StructType) structT).stdec;
 			for (VarDecl v : s.varDecls) {
-				if (v.varName.equals(fae.name)) {
-					t = v.type; break;
+				if (v.varName.equals(fae.name)) { // fae.name is name of the field
+					t = v.type;  break; 
 				}
 			}
-			if (t==null) error("Field doesn't exist in StructTypeDecl");
+			if (t!= null) return t;
+			else error("Field doesn't exist in StructTypeDecl");
 		}
-		return t;
+		return null;
 	}
 
 	@Override
@@ -267,7 +269,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 		Type lhsT = a.lhs.accept(this);
 		Type rhsT = a.rhs.accept(this);
 		if (!(lhsT instanceof ArrayType) && !(lhsT == BaseType.VOID) && equalTypes(lhsT, rhsT)) {
-			a.type = lhsT;
+			//a.type = lhsT;
 			return lhsT;
 		}
 		else error("Incorrect type expression: ASSIGN");
