@@ -4,7 +4,7 @@ int n;
 void main() {
   n = 5;
   while (n > 0) {
-      print_s((char*) "I'm stuck here!");
+      print_s((char*) "aaaa");
   }
 
 }
