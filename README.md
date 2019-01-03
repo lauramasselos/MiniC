@@ -1,6 +1,6 @@
-Made by Laura :P
+# Compiling Techniques #
 
-# Description of the course work is likely to be upatded!#
+# Description of the course work is likely to be updated!#
 
 Please note that the description of the course work might be updated from time to time to clarify things or fix mistakes.
 
@@ -9,7 +9,6 @@ Please note that the description of the course work might be updated from time t
 1. [Part 1 (parser)](desc/part1/), Thursday 11 October 2018  at 11am, weight = 20%
 2. [Part 2 (ast builder + semantic analyser)](desc/part2/),  Thursday 25 October 2018  at 11am, weight = 20%
 3. [Part 3 (code generator)](desc/part3/), Thursday 15 November 2018 at 11am, weight = 30%
-4. Part 4 (LLVM-based compiler pass), Monday 14 January 2019, 10am, weight = 30%
 
 Note that specific instructions for each part can be found above by clicking on the part name.
 
@@ -48,13 +47,6 @@ Also make sure that you do not share your tests as they should be written by you
 
 # Setup #
 
-## Register your student id and name
-
-First, we will need you fill up [this google form](https://docs.google.com/forms/d/e/1FAIpQLSeAj5JKrglJ0AuHD8uvIZc3syErIzuypaNNHlOD47vZi14sPA/viewform)
-in order for us to register you for the automarking.
-If you are not registered, we won't be able to mark you.
-Also please make sure to keep `ct-18-19` as your repository name, otherwise autmarking will fail.
-
 ## GitLab ##
 We will rely on gitlab and it is mandatory to use it for this coursework.
 GitLab is an online repository that can be used with the git control revision system.
@@ -69,29 +61,11 @@ If we identify that two students have identical portion of code, both will be co
 ## Obtaining your own copy of the ct-18-19 repository
 We are going to be using the Git revision control system during the course. Git is installed on DICE machines. If you use your own machine then make sure to install Git.
 
-You will need to have your own copy of the ct-18-19 repository. In order to fork this repository, click the fork button:
+You will need to have your own copy of the ct-18-19 repository. In order to fork this repository, click the fork button.
 
-![Forking the CT-18-19 repository](/figures/gl_fork1.png "Forking this repository.")
+Then, make the repository private.
 
-![Forking the CT-18-19 repository](/figures/gl_fork2.png "Forking this repository.")
-
-Then, make the repository private
-
-![Making repository private](/figures/gl_private1.png "Making repository private.")
-
-![Making repository private](/figures/gl_private2.png "Making repository private.")
-
-![Making repository private](/figures/gl_private3.png "Making repository private.")
-
-Now, grant access to the teaching staff
-
-![Granting the teaching staff read access](/figures/gl_permissions1.png "Granting the teaching staff read access.")
-
-![Granting the teaching staff read access](/figures/gl_permissions2.png "Granting the teaching staff read access.")
-
-You should grant the following users *Reporter* access:
-  * Christophe Dubach (username: cdubach)
-  * Federico Pizzuti (username: s1580329)
+Now, grant access to the teaching staff.
 
 Next, you will have to clone the forked repository to your local machine. In order to clone the repository you should launch a terminal and type:
 
