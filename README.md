@@ -1,6 +1,6 @@
 # Compiling Techniques #
 
-# Description of the course work is likely to be updated!#
+## Description of the course work is likely to be updated! 
 
 Please note that the description of the course work might be updated from time to time to clarify things or fix mistakes.
 
